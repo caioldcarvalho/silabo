@@ -13,9 +13,14 @@ const corpo = js.split('// -----------------------------------------------------
 const nos = {};
 const doc = { getElementById: id => (nos[id] ||= {innerHTML:'',textContent:'',
   setAttribute(){}, classList:{toggle(){}}, style:{}}) };
-const M = new Function('performance','document','addEventListener','navigator','requestAnimationFrame',
-  corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash};`
-)({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[]}, ()=>{});
+const store = {};
+const M = new Function('performance','document','addEventListener','navigator',
+  'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
+  corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
+                   commit, tele, tlogPad, current};`
+)({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
+  {getItem:k=>store[k]??null, setItem:(k,v)=>{store[k]=v}, removeItem:k=>{delete store[k]}},
+  fn=>fn(), function(){}, {createObjectURL:()=>'', revokeObjectURL(){}});
 
 const texto = id => [...(nos[id]?.innerHTML||'').matchAll(/>([^<>]+)</g)].map(m=>m[1].trim()).filter(Boolean).join(' | ');
 let ok=0,bad=0;
@@ -62,6 +67,33 @@ t('acende só o que está ativo',
 t('deixa apagado o que não está',
   ['LT','RB','L3','B'].every(k=>!new RegExp(`on[^>]*>${k}<`).test(h)) ? 'LT RB L3 B apagados':'ACESO INDEVIDO',
   ['apagados']);
+
+console.log('\n— telemetria —');
+const tipos = () => M.tele.eventos.map(e=>e.tipo).join(',');
+M.tele.eventos.length = 0;
+M.setVar('A'); M.stick.L.gates=[3]; M.stick.R.gates=[4];      // p + a
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
+M.commit();
+t('sílaba boa vira 1 evento', tipos(), ['silaba']);
+t('registra o que saiu', JSON.stringify(M.tele.eventos.at(-1).saiu), ['pa']);
+
+M.tele.eventos.length = 0;
+Object.assign(M.btn,{LB:1,RB:1});                              // pr + coda: conflito
+M.commit();
+t('conflito é detectado sozinho', tipos(), ['silaba','CONFLITO']);
+t('e diz o motivo', M.tele.eventos.find(e=>e.tipo==='CONFLITO').motivo, ['liquida-comida-pela-coda']);
+
+M.tele.eventos.length = 0;
+M.stick.L.gates=[]; M.stick.R.gates=[];
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
+M.commit();
+t('commit sem nada vira "vazio"', tipos(), ['vazio']);
+
+M.tele.pads.length = 0;
+M.tlogPad({id:'Fake Pad', mapping:'', buttons:new Array(11), axes:[0,0,0,0,0,0,0,0,0,1.29]});
+t('perfil do controle é gravado',
+  JSON.stringify(M.tele.pads[0]), ['Fake Pad','"mapping":""','"botoes":11','1.29']);
+console.log('  ↑ é isso que permite diagnosticar d-pad morto pelo log');
 
 console.log(`\n${ok} ok, ${bad} falha(s)`);
 process.exit(bad?1:0);

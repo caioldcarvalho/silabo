@@ -98,9 +98,20 @@ degrada para o gate simples, não vira erro.
 `c` vs `ç` **não é um segundo endereço**: ⟨ç⟩ nunca ocorre antes de e/i, então a
 vogal decide. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
 
-**D-pad — pós-correção** sobre o que já está escrito: ↑ circunflexo · → agudo ·
-← crase · ↓ alterna `s`↔`z` na última sibilante intervocálica (casa ↔ caza,
-faser → fazer).
+**D-pad — pós-correção** sobre o que já está escrito: ↑ circunflexo (ê ô â) ·
+→ agudo (á í ú) · ← crase · ↓ alterna `s`↔`z` na última sibilante intervocálica
+(faser → fazer).
+
+`é` e `ó` têm gate próprio e saem acentuados como o rótulo promete — o d-pad
+cobre o resto. Medido: **10,7% dos tokens** carregam vogal acentuada, caro
+demais para ser tudo pós-correção.
+
+**Telemetria.** A sessão é registrada: cada sílaba com o gesto que a produziu, as
+palavras fechadas, os apagamentos (o sinal honesto de que algo não saiu certo) e
+os **conflitos, que o motor detecta sozinho** — quando um modificador é
+apertado mas seu efeito é descartado, como a líquida que some porque RB está
+segurado. O contador fica no painel de medição e o log baixa em JSON. Sobrevive
+a recarga; nada sai da máquina.
 
 **Coda** — `RB` = -s (plural) · `RB+LB` = -r (infinitivos) · `RB+LT` = -l.
 `LB` significa "r" e `LT` significa "l" em qualquer posição: uma regra, dois

@@ -99,6 +99,10 @@ td.v{font-family:"IBM Plex Mono",monospace}
 .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .reset{font-family:inherit;font-size:12px;background:transparent;color:var(--muted);
   border:1px solid var(--line);border-radius:2px;padding:5px 10px;cursor:pointer;margin-top:12px}
+.tele{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  border-top:1px solid var(--line);margin-top:14px;padding-top:4px}
+.tele span{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);margin-top:12px}
+.tele span.warn{color:var(--hot)}
 .reset:focus-visible{outline:2px solid var(--right);outline-offset:2px}
 p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
 @media(max-width:820px){.stage,.grid{grid-template-columns:1fr}}
@@ -148,6 +152,11 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
       <div class="big"><span id="mt">—</span><small>ms por caractere</small></div>
     </div>
     <button class="reset" id="rs">Zerar medição</button>
+    <div class="tele">
+      <span id="tc">log: 0 eventos</span>
+      <button class="reset" id="tdl">Baixar log</button>
+      <button class="reset" id="tclr">Limpar</button>
+    </div>
   </div>
 </div>
 
@@ -254,9 +263,12 @@ function buildOnset(){
   const respell = mk.length>1 && mk[mk.length-1]===RESPELL_GATE
                   && mk[0]!==RESPELL_GATE && !!RESPELL[base];
 
-  let liq = '';
+  let liq = '', suprimido = null;
   if(variant==='A'){
-    if(!btn.RB){ if(btn.LB) liq='r'; else if(btn.LT) liq='l'; }
+    // the conflict the design already knows about: with RB held, LB/LT mean
+    // coda type, so the liquid silently disappears. Recorded, not hidden.
+    if(btn.RB && (btn.LB||btn.LT)) suprimido = 'liquida-comida-pela-coda';
+    else if(btn.LB) liq='r'; else if(btn.LT) liq='l';
   } else if(!respell){
     // roll: second gate read on the liquid axis — ← is l, → is r
     if(mk.length>1){
@@ -264,11 +276,12 @@ function buildOnset(){
       if(t===6) liq='l'; else if(t===2) liq='r';
     }
   }
-  if(!liq) return {c:base,respell};
+  if(!liq) return {c:base,respell,suprimido};
   const pair = base+liq;
-  if(DIGRAPH[pair])          return {c:DIGRAPH[pair], respell:false};
-  if(clusterOk(base,liq))    return {c:pair, respell:false};
-  return {c:base, respell};   // illegal cluster: the liquid does not apply
+  if(DIGRAPH[pair])       return {c:DIGRAPH[pair], respell:false, suprimido};
+  if(clusterOk(base,liq)) return {c:pair, respell:false, suprimido};
+  // illegal cluster: the liquid does not apply
+  return {c:base, respell, suprimido:'cluster-inexistente:'+pair};
 }
 
 // A roll along the rim crosses every gate in between, and those are travel,
@@ -307,7 +320,7 @@ function current(){
   const o = buildOnset();
   const {v,nasal} = buildNucleus();
   const c = buildCoda();
-  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:c};
+  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:c, suprimido:o.suprimido};
 }
 
 // ---------------------------------------------------------------- orthography
@@ -356,10 +369,11 @@ function orthograph(prevWord, syl){
 // the whole word buffer, which is what lets segmentation stay free.
 function finish(w){
   return w
-    // é/ó are a PHONOLOGICAL distinction (sela /ɛ/ vs selo /e/) that Portuguese
-    // spelling does not mark: both are written e/o. The acute accent is
-    // post-correction on the d-pad (pé, avó, só), not a property of the gate.
-    .replace(/é/g,'e').replace(/ó/g,'o')
+    // é/ó are written as typed. Collapsing them to e/o was defensible on
+    // phonology (sela /ɛ/ vs selo /e/ is not marked in writing) but wrong on
+    // cost: 10.7% of tokens carry an accented vowel — measured, see
+    // tools/corpus.mjs — and those two gates were sitting orthographically
+    // empty. An address already paid for should not be spent on nothing.
     // nasal diphthongs have dedicated spellings — "ãu" does not exist in
     // Portuguese, it is always written "ão"; same for ãe and õe
     .replace(/auN/g,'ão').replace(/[aá]iN/g,'ãe').replace(/[oó]iN/g,'õe')
@@ -377,13 +391,77 @@ function finish(w){
 
 function commit(){
   const syl = current();
-  if(!syl.onset && !syl.vowel && !syl.coda) return;
+  if(!syl.onset && !syl.vowel && !syl.coda){
+    tlog('vazio', {gesto:gesto(), variante:variant});   // pressed commit, got nothing
+    return;
+  }
   const before = word;
   word = orthograph(word, syl);
   const gained = word.length - before.length;
   if(gained>0){ m.c += gained; }
   m.g++;
   if(!m.t0) m.t0 = performance.now();
+  tlog('silaba', {gesto:gesto(), variante:variant,
+    partes:{ataque:syl.onset||'', nucleo:syl.vowel||'', nasal:!!syl.nasal,
+            coda:syl.coda||'', regrafia:!!syl.respell},
+    saiu: finish(word).slice(finish(before).length), palavra: finish(word)});
+  if(syl.suprimido) tlog('CONFLITO', {gesto:gesto(), variante:variant,
+    motivo:syl.suprimido, saiu:finish(word).slice(finish(before).length)});
+  render();
+}
+
+// ---------------------------------------------------------------- telemetria
+// Records what was actually pressed and what came out, so a session can be read
+// back later instead of remembered. The point is the syllables that FAILED:
+// conflicts are detected by the engine itself (a modifier whose effect was
+// dropped) and backspaces are logged, because deleting is the honest signal
+// that something did not come out right.
+const TELE_KEY = 'silabo-tele', TELE_MAX = 8000;
+let tele = {inicio:new Date().toISOString(), agente:navigator.userAgent, pads:[], eventos:[]};
+try{ const salvo = JSON.parse(localStorage.getItem(TELE_KEY)||'null');
+     if(salvo && Array.isArray(salvo.eventos)) tele = salvo; }catch(e){}
+
+let teleTimer = 0;
+function tsave(){
+  if(teleTimer) return;
+  teleTimer = setTimeout(()=>{ teleTimer=0;
+    try{ localStorage.setItem(TELE_KEY, JSON.stringify(tele)); }catch(e){}
+  }, 800);
+}
+function tlog(tipo, dados){
+  tele.eventos.push(Object.assign({ts:new Date().toISOString().slice(11,23), tipo}, dados));
+  if(tele.eventos.length>TELE_MAX) tele.eventos.splice(0, 1000);
+  tsave();
+}
+// Which buttons are down, as a short readable string
+function pressed(){
+  return Object.keys(btn).filter(k=>btn[k]).join('+') || '—';
+}
+function gesto(){
+  const g = s => stick[s].gates.map(x=>DIRNAME[x]).join('') || '·';
+  return `L:${g('L')} R:${g('R')} [${pressed()}]`;
+}
+// Logged once per controller, and it is what lets a d-pad problem be diagnosed
+// from the log alone instead of guessed at.
+function tlogPad(pad){
+  if(tele.pads.some(p=>p.id===pad.id)) return;
+  tele.pads.push({id:pad.id, mapping:pad.mapping,
+                  botoes:pad.buttons.length, eixos:pad.axes.length,
+                  eixosEmRepouso:[...pad.axes].map(a=>+a.toFixed(3)),
+                  visto:new Date().toISOString()});
+  tsave();
+}
+
+function baixarTele(){
+  const nome = 'silabo-log-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';
+  const blob = new Blob([JSON.stringify(tele,null,1)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nome; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function limparTele(){
+  tele = {inicio:new Date().toISOString(), agente:navigator.userAgent, pads:[], eventos:[]};
+  try{ localStorage.removeItem(TELE_KEY); }catch(e){}
   render();
 }
 
@@ -517,6 +595,13 @@ function render(){
   document.getElementById('mr').textContent = m.g ? (m.c/m.g).toFixed(2) : '—';
   const dt = m.t0 ? performance.now()-m.t0 : 0;
   document.getElementById('mt').textContent = (m.c>1&&dt) ? Math.round(dt/m.c) : '—';
+
+  const conflitos = tele.eventos.filter(e=>e.tipo==='CONFLITO').length;
+  const tc = document.getElementById('tc');
+  if(tc){
+    tc.textContent = `log: ${tele.eventos.length} eventos` + (conflitos?`  ·  ${conflitos} conflito(s)`:'');
+    tc.className = conflitos ? 'warn' : '';
+  }
 }
 function escapeHtml(t){return t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
@@ -563,7 +648,10 @@ function paintBinds(){
 const face = {A:0,B:0,X:0,Y:0,heldB:0};
 function atRest(){ return stick.L.live===null && stick.R.live===null; }
 
-function endWord(suffix){ text += finish(word)+suffix; word=''; }
+function endWord(suffix){
+  if(word) tlog('palavra', {palavra:finish(word), fim:suffix.trim()||'espaço'});
+  text += finish(word)+suffix; word='';
+}
 
 // D-pad = post-correction on what is already written. Accents live here because
 // they are lexical and cannot be derived; the ↓ slot used to be cedilla and is
@@ -606,16 +694,32 @@ function toggleSibilant(){
 
 function dpad(now){
   if(!atRest()) { Object.assign(dpadPrev, now); return; }
-  if(now.up    && !dpadPrev.up)    accentLast(CIRC);
-  if(now.right && !dpadPrev.right) accentLast(ACUTE);
-  if(now.left  && !dpadPrev.left)  accentLast(GRAVE);
-  if(now.down  && !dpadPrev.down)  toggleSibilant();
+  if(now.up    && !dpadPrev.up)   { accentLast(CIRC);  tlog('dpad',{op:'circunflexo', virou:finish(word)||text.slice(-14)}); }
+  if(now.right && !dpadPrev.right) { accentLast(ACUTE); tlog('dpad',{op:'agudo',       virou:finish(word)||text.slice(-14)}); }
+  if(now.left  && !dpadPrev.left)  { accentLast(GRAVE); tlog('dpad',{op:'crase',       virou:finish(word)||text.slice(-14)}); }
+  if(now.down  && !dpadPrev.down)  { toggleSibilant();  tlog('dpad',{op:'s↔z',         virou:finish(word)||text.slice(-14)}); }
   Object.assign(dpadPrev, now);
 }
 
-function faceButtons(pad){
-  const d = {up:    pad.buttons[12]?.pressed?1:0, down: pad.buttons[13]?.pressed?1:0,
+// Not every controller reports the d-pad as buttons 12-15: outside the
+// "standard" mapping it often arrives as a hat on an extra axis. Read both,
+// so a non-standard pad is not silently dead.
+function readDpad(pad){
+  const b = {up:    pad.buttons[12]?.pressed?1:0, down: pad.buttons[13]?.pressed?1:0,
              left:  pad.buttons[14]?.pressed?1:0, right:pad.buttons[15]?.pressed?1:0};
+  if(b.up||b.down||b.left||b.right) return b;
+  const hat = pad.axes[9];                       // -1..1 hat, idle sits near 1.29
+  if(typeof hat==='number' && hat>=-1.01 && hat<=1.01){
+    const oct = Math.round((hat+1)*3.5);         // 0=↑ 1=↗ 2=→ … 7=↖
+    if(oct>=0 && oct<=7) return {
+      up:    oct===0||oct===1||oct===7 ?1:0, right: oct>=1&&oct<=3 ?1:0,
+      down:  oct>=3&&oct<=5 ?1:0,             left:  oct>=5&&oct<=7 ?1:0 };
+  }
+  return b;
+}
+
+function faceButtons(pad){
+  const d = readDpad(pad);
   Object.assign(held, d,
     {A:pad.buttons[0]?.pressed?1:0, B:pad.buttons[1]?.pressed?1:0,
      X:pad.buttons[2]?.pressed?1:0, Y:pad.buttons[3]?.pressed?1:0});
@@ -628,9 +732,12 @@ function faceButtons(pad){
     if(now.X && !face.X) endWord('. ');
     if(now.Y && !face.Y) endWord('? ');
     // B = backspace, held = delete the whole word
-    if(now.B && !face.B){ face.heldB = performance.now(); if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
+    if(now.B && !face.B){ face.heldB = performance.now();
+      tlog('apaga', {alvo:'letra', antes:finish(word)||text.slice(-14)});
+      if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
     if(now.B && face.heldB && performance.now()-face.heldB > 450){
       face.heldB = performance.now()+1e9;   // fires once
+      tlog('apaga', {alvo:'palavra', antes:finish(word)||text.slice(-20)});
       if(word) word=''; else text = text.replace(/\S*\s*$/,'');
     }
     if(!now.B) face.heldB = 0;
@@ -644,7 +751,7 @@ function poll(){
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   pad = [...pads].find(p=>p);
   const st = document.getElementById('status');
-  if(pad){ st.textContent = pad.id.slice(0,42); st.className='on'; }
+  if(pad){ st.textContent = pad.id.slice(0,42); st.className='on'; tlogPad(pad); }
 
   let lx=kb.L[0], ly=kb.L[1], rx=kb.R[0], ry=kb.R[1];
   if(pad){
@@ -710,9 +817,12 @@ function setVariant(v){
   variant=v;
   document.getElementById('vA').classList.toggle('sel',v==='A');
   document.getElementById('vB').classList.toggle('sel',v==='B');
+  tlog('variante', {para:v});
   paintBinds(); resetMetrics();
 }
 document.getElementById('rs').onclick=resetMetrics;
+document.getElementById('tdl').onclick=baixarTele;
+document.getElementById('tclr').onclick=limparTele;
 function resetMetrics(){ m={g:0,c:0,t0:0}; render(); }
 
 drawWheel(document.getElementById('wl'),

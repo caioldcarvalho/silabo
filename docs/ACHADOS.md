@@ -247,7 +247,18 @@ saíam "girrafa", "carro". Era **redundante**, porque o /ʀ/ forte já tem clust
 explícito (`r`+`r` → rr). Regra removida; `caro` e `carro` agora são gestos
 diferentes, como devem ser.
 
-### `é` e `ó` saíam acentuados
+### `é` e `ó` — decisão revertida em 07/09
+
+Eu tinha colapsado os dois em `e`/`o` (a distinção /e/ vs /ɛ/ não é marcada na
+escrita) e mandado todo acento para o d-pad. **Errado por custo:** medido,
+**10,73% dos tokens** carregam vogal acentuada — `é` sozinho é 3,02%, `ê` 2,55%.
+Uma pós-correção em 1 de cada 10 tokens é caríssima, e os gates `é`/`ó` estavam
+**ortograficamente vazios**: endereço já pago, gasto em nada.
+
+Agora saem literais, como o rótulo promete. O d-pad cobre `ê ô â` (2,66%) e
+`á í ú`, que não têm gate próprio.
+
+### (histórico) `é` e `ó` saíam acentuados
 Os gates `é`/`ó` marcam uma distinção **fonológica** real (sela /ɛ/ vs selo /e/)
 que a ortografia do português **não escreve**: ambos são `e`/`o`. O motor
 grafava o acento, então "bom" saía "bóm". Normalizado; o acento agudo continua
@@ -325,6 +336,14 @@ precisam de novo endereço.
 - `c`/`ç` por regra da vogal seguinte
 - ⟨s⟩ como default de /z/ intervocálico, medido contra corpus
 - d-pad ligado: ↑ ê ô â · → é ó á · ← à · ↓ alterna s↔z
+
+**Instrumentação (07/09):** a sessão agora é registrada — sílaba, gesto,
+palavra, apagamento — e o **conflito é detectado pelo próprio motor**: quando um
+modificador é apertado e seu efeito descartado, sai um evento `CONFLITO` com o
+motivo (`liquida-comida-pela-coda`, `cluster-inexistente:sr`). O perfil do
+controle (`id`, `mapping`, nº de botões e eixos) vai junto, o que permite
+diagnosticar um d-pad morto pelo log em vez de por adivinhação. Baixa em JSON
+pelo painel de medição.
 
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
