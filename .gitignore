@@ -3,3 +3,5 @@ node_modules/
 dist/
 *.log
 tools/.pt_br_50k.txt
+pad_*.png
+pad_*.svg

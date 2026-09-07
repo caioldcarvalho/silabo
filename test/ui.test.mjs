@@ -11,13 +11,15 @@ const js   = html.split('<script>')[1].split('</script>')[0];
 const corpo = js.split('// ---------------------------------------------------------------- boot')[0];
 
 const nos = {};
+// setAttribute GUARDA o valor: sem isso os testes de cor liam undefined e
+// passavam por vacuidade em vez de por acerto
 const doc = { getElementById: id => (nos[id] ||= {innerHTML:'',textContent:'',
-  setAttribute(){}, classList:{toggle(){}}, style:{}}) };
+  setAttribute(k,v){ this[k]=v; }, classList:{toggle(){}}, style:{}}) };
 const store = {};
 const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
-                   commit, tele, tlogPad, current, cycleAccent, toggleSibilant,
+                   commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
                    setWord:w=>{word=w}, getWord:()=>word};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
   {getItem:k=>store[k]??null, setItem:(k,v)=>{store[k]=v}, removeItem:k=>{delete store[k]}},
@@ -57,17 +59,36 @@ t('gate ↓ (a)', texto('rsat'), ['R3','ã','roll ↖','ai','roll ↗','au']);
 M.stick.R.gates=[0]; M.satellites('r');                       // ↑ = sem vogal
 t('gate ↑ (—): sem satélite', texto('rsat')||'(vazio)', ['(vazio)']);
 
-console.log('\n— HUD —');
+console.log('\n— desenho do controle —');
+M.drawPad();
+const svg = nos.padsvg.innerHTML;
+t('desenha todos os controles',
+  ['LB','LT','RB','RT','A','B','X','Y','up','down','left','right','L3','R3']
+    .filter(k=>svg.includes('id="p-'+k+'"')).join(' '),
+  ['LB','LT','RB','RT','A','B','X','Y','up','down','left','right','L3','R3']);
+t('8 gates por analógico',
+  [0,1,2,3,4,5,6,7].every(i=>svg.includes(`id="p-Lg${i}"`)&&svg.includes(`id="p-Rg${i}"`))
+    ? '16 pontos de gate' : 'FALTAM', ['16 pontos']);
+
 M.stick.L.gates=[2,1]; M.stick.R.gates=[4];
 Object.assign(M.btn,{LB:1,LT:0,RB:0,RT:1,L3:0,R3:0}); M.held.A=1;
+M.axesNow.L=[0.8,-0.6]; M.axesNow.R=[0,1];
 M.renderHud();
-const h = nos.hud.innerHTML;
-t('mostra roll do esquerdo', texto('hud'), ['→↗']);
-t('acende só o que está ativo',
-  ['LB','RT','A'].map(k=>new RegExp(`on[^>]*>${k}`).test(h)?k:'').join(' '), ['LB','RT','A']);
-t('deixa apagado o que não está',
-  ['LT','RB','L3','B'].every(k=>!new RegExp(`on[^>]*>${k}<`).test(h)) ? 'LT RB L3 B apagados':'ACESO INDEVIDO',
+const cor = id => nos['p-'+id]?.fill;
+const rot = id => nos['t-'+id]?.fill;
+t('acende só o que está pressionado',
+  ['LB','RT','A'].map(k=>cor(k)==='var(--hot)'?k:'!'+k).join(' '), ['LB','RT','A']);
+t('e deixa o resto apagado',
+  ['LT','RB','L3','B'].every(k=>cor(k)==='var(--line)') ? 'LT RB L3 B apagados' : 'ACESO INDEVIDO',
   ['apagados']);
+t('rótulo inverte junto (legível nos dois estados)',
+  `LB:${rot('LB')} LT:${rot('LT')}`, ['LB:var(--bg)','LT:var(--muted)']);
+t('o analógico deflete de verdade',
+  `${nos['p-L3'].cx>100?'direita':'?'} ${nos['p-L3'].cy<96?'cima':'?'}`, ['direita','cima']);
+t('gate de origem ≠ gate de roll',
+  `origem:${cor('Lg2')} roll:${cor('Lg1')} intocado:${cor('Lg5')}`,
+  ['origem:var(--ink)','roll:var(--hot)','intocado:var(--line)']);
+t('sequência do roll em texto', texto('hudseq'), ['→↗']);
 
 console.log('\n— acento é um CICLO, e sempre volta —');
 const ciclo = (palavra, n, dir=1) => { M.setWord(palavra);
