@@ -161,6 +161,31 @@ Este era o ponto onde "fonologia arranja, ortografia rotula" batia no limite de
 o português não ser fonêmico o bastante. A saída não foi um dicionário: foi
 **devolver a escolha ao usuário, de graça**, num slot que já estava vago.
 
+### Medido contra corpus (07/09)
+
+`node tools/corpus.mjs` — OpenSubtitles pt_BR, 50k formas / 419M tokens,
+ponderado por token, que é o que um input method realmente paga:
+
+| endereço | custo (tokens que dependem dele) | veredito |
+|---|---|---|
+| `s`+`r` → **c** | 2,84% | endereço se justifica |
+| `z`+`l` → **s** | 2,13% | **polaridade invertida** — ver abaixo |
+| `s`+`l` → **ç** | 1,35% | **redundante** — é regra, não endereço |
+| `j`+`r` → **g** | 0,74% | endereço se justifica |
+
+**`ç` é derivável, o slot é desperdício.** ⟨ç⟩ nunca ocorre antes de e/i nem em
+início de palavra, então dado /s/ a grafia é função da vogal seguinte: frontal →
+`c`, posterior → `ç`. Mesma família do `c→qu` que o motor já faz. As 7
+contra-evidências do corpus (`voçê`, `começe`, `conheçe`…) são **erros de grafia
+de legenda amadora** — o teste automático dizia "FALSO" e a inspeção das formas
+mostrou o contrário. Vale de lição: contar não basta, é preciso olhar o que
+foi contado.
+
+**`z`+`l` está resolvendo o problema pelo lado errado.** ⟨s⟩ para /z/
+intervocálico é 1,86× mais frequente que ⟨z⟩ (2,13% vs 1,14%) — maioria, não
+esmagadora, mas suficiente para inverter: o default deveria ser ⟨s⟩ (casa, mesa,
+coisa, precisa) e ⟨z⟩ é que deveria custar o endereço (fazer, dizer, azul).
+
 ---
 
 ## 3b. Bugs achados ao implementar o item 3

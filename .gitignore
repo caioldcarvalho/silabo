@@ -2,3 +2,4 @@ node_modules/
 .DS_Store
 dist/
 *.log
+tools/.pt_br_50k.txt
