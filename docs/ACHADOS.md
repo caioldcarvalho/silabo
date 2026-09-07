@@ -584,6 +584,53 @@ slot pago e vazio, candidato natural para `k`, `w`, `y`, `h` (medidos no corpus:
 
 ---
 
+## 11. Sessão de 10 segundos, três achados
+
+Log em [`sessao-2026-09-07e.json`](sessao-2026-09-07e.json). Um gesto só, e vale
+por vários.
+
+**1. O motor fez o que nenhuma variante anterior fazia:**
+
+```
+L:↑↗→ R:↓ [RB+RT+R3] → 'trãs'
+partes = {ataque:"tr", nucleo:"a", nasal:true, coda:"s"}
+```
+
+Cluster **mais** nasal **mais** coda, num gesto. Em A isso era impossível (a
+líquida sumia com RB), em B e C também. Aqui saiu de primeira — a fonologia
+está certa; só a **grafia** escolheu "ãs".
+
+**2. Vírgula e interrogação funcionaram, mas o log quase não contou.**
+`endWord` só registrava quando havia palavra no buffer, então pontuação isolada
+aparecia só de raspão, no `restou` de um apagamento posterior. Agora sai como
+evento `pontuacao`.
+
+E o teste dessa correção pegou um bug de verdade: pontuação depois de uma
+palavra **já fechada** herdava o espaço dela — `"palavra , "` em vez de
+`"palavra, "`.
+
+**3. Log limpo pelo usuário ficava sem marcador de sessão.** `limparTele`
+zerava tudo e não gravava o `sessao` de volta, então a sessão nascia anônima.
+
+### O caso `trans` continua sem saída, e é barato resolver
+
+| | tokens | formas |
+|---|---|---|
+| **-ãs** | 0,0086% | 19 — irmãs, fãs, maçãs, manhãs, alemãs |
+| -ans | 0,0050% | 23 — orleans, jeans, trans, slogans |
+
+O default está certo (o `-ãs` é quase o dobro e é português nativo), mas o caso
+marcado **não tem endereço**: o ciclo de acento opera no buffer cru, onde a
+vogal ainda é `a`, então ciclar produz "tráns", nunca "trans".
+
+**Proposta: o `↑` do d-pad, que está livre, vira o ciclador da nasal escrita** —
+domínio "última vogal nasal", alfabeto `til → n → m`. É o mesmo formato dos
+outros dois cicladores (escopo e alfabeto definidos, reversível), e resolveria
+também qualquer discordância em `-am`/`-ã` sem depender do ciclo de acento.
+Não implementado: 0,005% é pouco para gastar um slot sem o dono decidir.
+
+---
+
 ## 9. O til é pós-correção, não default — e isso corrigiu um bug grande
 
 Ideia do Caio, a partir do caso `ãs`/`ans`:

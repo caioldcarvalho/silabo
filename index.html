@@ -491,6 +491,8 @@ function baixarTele(){
 function limparTele(){
   tele = {inicio:new Date().toISOString(), agente:navigator.userAgent, pads:[], eventos:[]};
   try{ localStorage.removeItem(TELE_KEY); }catch(e){}
+  // sem isto o log recomeçava sem marcador e a sessão ficava anônima
+  tlog('sessao', {inicio:new Date().toISOString(), obs:'log limpo pelo usuário'});
   render();
 }
 
@@ -745,7 +747,14 @@ function atRest(){ return stick.L.live===null && stick.R.live===null; }
 function apagaUm(){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
 
 function endWord(suffix){
-  if(word) tlog('palavra', {palavra:finish(word), fim:suffix.trim()||'espaço'});
+  // Log even with an empty buffer: pontuação sozinha também é entrada, e sem
+  // isso a vírgula e a exclamação apareciam no log só de raspão, no "restou"
+  // de um apagamento posterior.
+  tlog(word ? 'palavra' : 'pontuacao',
+       {palavra: finish(word), fim: suffix.trim() || 'espaço'});
+  // Pontuação depois de uma palavra já fechada não pode herdar o espaço dela:
+  // "palavra , " em vez de "palavra, ".
+  if(!word && /[.,!?]/.test(suffix)) text = text.replace(/ +$/,'');
   text += finish(word)+suffix; word='';
 }
 

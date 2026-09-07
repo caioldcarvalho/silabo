@@ -146,6 +146,19 @@ M.faceButtons(pad([1]));
 t('LB+LT+B limpa tudo', JSON.stringify([M.getText(),M.getWord()]), ['["",""]']);
 Object.assign(M.btn,{LB:0,LT:0});
 
+console.log('\n— pontuação sozinha também entra no log —');
+M.tele.eventos.length = 0;
+M.setText('ja fechei a palavra '); M.setWord('');
+M.stick.L.gates=[]; M.stick.R.gates=[]; M.stick.L.live=null; M.stick.R.live=null;
+Object.assign(M.btn,{LB:0,LT:0,RB:1,RT:0,L3:0,R3:0});   // RB segurado = vírgula
+Object.assign(M.face,{A:0,B:0,X:0,Y:0,heldB:0,nextB:0,apagados:0});
+M.faceButtons({buttons:Array.from({length:16},(_,i)=>({pressed:i===2?1:0,value:0})),
+               axes:[0,0,0,0], mapping:'standard', id:'fake'});
+t('X + RB põe vírgula, sem espaço antes', M.getText(), ['ja fechei a palavra, ']);
+t('e registra no log',
+  M.tele.eventos.map(e=>e.tipo+':'+(e.fim||'')).join(' '), ['pontuacao:,']);
+console.log('  ↑ antes disso a vírgula só aparecia de raspão num apagamento');
+
 console.log('\n— telemetria —');
 const tipos = () => M.tele.eventos.map(e=>e.tipo).join(',');
 M.tele.eventos.length = 0;
