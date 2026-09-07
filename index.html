@@ -488,7 +488,7 @@ const KEYVEC = {
 };
 const KEYBTN = {Digit1:'LB',Digit2:'LT',Digit3:'RB',Digit4:'L3',Digit5:'R3'};
 addEventListener('keydown',e=>{
-  if(KEYVEC[e.code]){ const[,x,y]=KEYVEC[e.code]; const s=KEYVEC[e.code][0]; kb[s]=[x,y]; e.preventDefault(); }
+  if(KEYVEC[e.code] && !e.shiftKey){ const[,x,y]=KEYVEC[e.code]; const s=KEYVEC[e.code][0]; kb[s]=[x,y]; e.preventDefault(); }
   if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=1;
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
   if(e.code==='Enter'){ text+=finish(word)+' '; word=''; }

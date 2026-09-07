@@ -45,6 +45,11 @@ enxergá-lo. Sem controle, dá para testar pelo teclado:
 | `4` `5` | L3, R3 |
 | `Enter` | fecha a palavra |
 | `Backspace` | apaga |
+| `Shift+.` / `Shift+/` | ponto final / interrogação |
+
+No controle, fora da sílaba (analógicos em repouso): **A** = espaço, **A+RB** =
+enter, **B** = backspace (segurar apaga a palavra), **X** = ponto final,
+**Y** = interrogação.
 
 ## O layout
 
@@ -71,6 +76,20 @@ ortografia comum:
    é     ó
       a
 ```
+
+**Grafia por cluster ilegal** — combinações que o português proíbe ficam vagas,
+e as vagas viram as grafias que faltavam. Sem botão novo, sem modo, sem
+dicionário:
+
+| gesto | grafia | exemplo |
+|---|---|---|
+| `s` + `r` | **c** | cebola, cidade |
+| `s` + `l` | **ç** | ação, moço |
+| `j` + `r` | **g** | gente, girafa |
+| `z` + `l` | **s** | casa, mesa |
+
+Das 32 combinações ataque×líquida só 13 são clusters reais; ainda sobram 11
+buracos livres. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
 
 **Coda** — `RB` = -s (plural) · `RB+LB` = -r (infinitivos) · `RB+LT` = -l.
 `LB` significa "r" e `LT` significa "l" em qualquer posição: uma regra, dois
@@ -101,12 +120,19 @@ gate com histerese (entra em 0.55, sai em 0.38), roll com reset ao centro, rodas
 em SVG, ortografador operando **sobre o buffer da palavra** (é o que permite
 `ca.mpo` e `cam.po` produzirem "campo") e painel de medição.
 
+Suíte de regressão com 35 casos, sem dependências:
+
+```fish
+node test/motor.test.mjs
+```
+
 Lacunas conhecidas, deliberadamente explícitas em vez de meio-resolvidas:
 
-- `ç` não existe — "ação" sai "assão"
-- `j`/`g` antes de e/i sempre sai `j`
-- `ê`/`ô`/`â` sem entrada (iriam no d-pad como pós-correção)
+- `ê`/`ô`/`â` e os acentos agudos sem entrada (vão no d-pad, como pós-correção)
 - `x` vs `ch` é decisão não tomada
+- tritongo (`Uruguai`, `quais`) — provavelmente pede labialização no ataque,
+  não tritongo no núcleo
+- plural de `-ão` é lexical (pães/mãos/ações), então é digitado sílaba a sílaba
 
 Nenhuma delas impede medir o que importa agora.
 
