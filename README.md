@@ -131,10 +131,20 @@ gate com histerese (entra em 0.55, sai em 0.38), roll com reset ao centro, rodas
 em SVG, ortografador operando **sobre o buffer da palavra** (é o que permite
 `ca.mpo` e `cam.po` produzirem "campo") e painel de medição.
 
-Suíte de regressão com 35 casos, sem dependências:
+A interface mostra, ao redor da casa em que o analógico está, **o que cada
+modificador faria e qual gatilho o produz** — e o gatilho muda entre as
+variantes (na A a líquida é botão, na B é movimento), que é justamente a parte
+confusa de aprender. Clusters que o português não admite não são oferecidos.
+
+No topo, um HUD acende **cada entrada enquanto é pressionada**, incluindo o roll
+dos analógicos, para que uma gravação de tela se explique sozinha: quem assiste
+vê o que foi apertado e o que saiu, no mesmo quadro.
+
+Duas suítes de regressão, sem dependências:
 
 ```fish
-node test/motor.test.mjs
+node test/motor.test.mjs   # 50 casos — sílaba e ortografia
+node test/ui.test.mjs      # 14 casos — o que os satélites e o HUD geram
 ```
 
 Lacunas conhecidas, deliberadamente explícitas em vez de meio-resolvidas:

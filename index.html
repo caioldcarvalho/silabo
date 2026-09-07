@@ -46,6 +46,22 @@ header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:2
 .variants button.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .variants button:focus-visible{outline:2px solid var(--right);outline-offset:2px}
 
+#hud{
+  display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:10px 12px;margin-bottom:20px;min-height:44px;
+}
+#hud .k{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  color:var(--muted);background:transparent;
+  border:1px solid var(--line);border-radius:2px;padding:4px 9px;
+  min-width:34px;text-align:center;
+}
+#hud .k.on{background:var(--hot);border-color:var(--hot);color:var(--bg)}
+#hud .st{min-width:66px;text-align:left}
+#hud .st.on{background:transparent;color:var(--ink);border-color:var(--ink)}
+#hud .st b{font-weight:500}
+#hud .sep{width:1px;align-self:stretch;background:var(--line);margin:0 5px}
 .stage{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 .wheel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px}
 .wheel h2{font-size:13px;font-weight:500;margin:0 0 10px;color:var(--muted)}
@@ -98,6 +114,8 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
     <button id="vB">B · roll</button>
   </div>
 </header>
+
+<div id="hud" aria-label="botões pressionados"></div>
 
 <div class="stage">
   <div class="wheel">
@@ -157,6 +175,13 @@ const DIGRAPH = {'nr':'nh','lr':'lh','rr':'rr','mr':'nh'};
 // The rule is ONE motor fact, not a table of pairs: "the sound of the gate you
 // started on, written with the letter that lives at ↗" (c, or g when voiced).
 // Belongs to the ORTHOGRAPHER — another language replaces this wholesale.
+// Which onset+liquid clusters Portuguese actually allows. Anything outside this
+// set and outside DIGRAPH is simply not a thing — so the liquid is IGNORED
+// rather than written out as garbage ("sr", "xl"). This is phonotactics, which
+// belongs to the resolver.
+const LIQUID_OK = new Set(['pr','br','tr','dr','cr','gr','fr','vr',
+                           'pl','bl','cl','gl','fl']);
+
 const RESPELL_GATE = 1;                       // ↗ — where c/g live
 const RESPELL = {
   s: front => front ? 'c' : 'ç',              // cebola, cidade · ação, moço
@@ -174,6 +199,13 @@ const stick = {
 };
 const btn = {LB:0,LT:0,RB:0,RT:0,L3:0,R3:0};
 const prev = {RT:0};
+
+// Everything the HUD shows. Face/d-pad presses on the keyboard are momentary,
+// so they light up for a beat instead of never showing at all.
+const held = {A:0,B:0,X:0,Y:0,up:0,down:0,left:0,right:0};
+const flashes = {};
+function flash(k){ flashes[k] = performance.now()+150; }
+function lit(k){ return held[k] || (flashes[k]||0) > performance.now(); }
 
 let word = '';      // current word buffer (already orthographed)
 let text = '';      // committed text
@@ -226,7 +258,9 @@ function buildOnset(){
   }
   if(!liq) return {c:base,respell};
   const pair = base+liq;
-  return {c: DIGRAPH[pair] || pair, respell:false};
+  if(DIGRAPH[pair])     return {c:DIGRAPH[pair], respell:false};
+  if(LIQUID_OK.has(pair)) return {c:pair, respell:false};
+  return {c:base, respell};   // illegal cluster: the liquid does not apply
 }
 
 // A roll along the rim crosses every gate in between, and those are travel,
@@ -361,8 +395,59 @@ function drawWheel(el, map, accent, side){
     s += `<text id="${side}${i}" x="${x}" y="${y+9}" text-anchor="middle"
             font-family="IBM Plex Mono, monospace" font-size="26" fill="var(--muted)">${map[i]}</text>`;
   }
+  s += `<g id="${side}sat"></g>`;
   s += `<circle id="${side}dot" cx="${cx}" cy="${cy}" r="7" fill="${accent}"/>`;
   el.innerHTML = s;
+}
+
+// What the modifiers would turn the live gate into, drawn around its own house.
+// Shows the TRIGGER next to the result, because the trigger differs between
+// variants (in A the liquid is a button, in B it is a roll) and that is exactly
+// what is confusing to learn.
+const satCache = {l:'',r:''};
+
+function satellites(side){
+  const S = stick[side==='l'?'L':'R'];
+  const g = S.gates.length ? S.gates[0] : null;
+  const voiced = variant==='A' ? btn.L3 : btn.LB;
+  const nasal  = variant==='A' ? btn.R3 : btn.LT;
+  const chave = [side,g,variant,voiced,nasal,btn.LB,btn.LT,btn.RB].join(',');
+  if(chave===satCache[side]) return;
+  satCache[side] = chave;
+
+  const host = document.getElementById(side+'sat');
+  if(!host) return;
+  if(g===null){ host.innerHTML=''; return; }
+
+  const cx=150, cy=150, a=g*Math.PI/4 - Math.PI/2;
+  const x = cx+Math.cos(a)*92, y = cy+Math.sin(a)*92;
+  const itens = [];   // [dx, dy, gatilho, resultado, aceso]
+
+  if(side==='l'){
+    const base = ONSET_BY_GATE[g];
+    const b = voiced ? VOICED[base] : base;
+    const liga = (p) => DIGRAPH[p] || p;
+    itens.push([0,-30, variant==='A'?'L3':'LB', VOICED[base], !!voiced]);
+    const vale = p => DIGRAPH[p] || (LIQUID_OK.has(p) ? p : null);
+    if(vale(b+'r')) itens.push([38,6,  variant==='A'?'LB':'roll →', liga(b+'r'), variant==='A' ? (!!btn.LB&&!btn.RB) : false]);
+    if(vale(b+'l')) itens.push([-38,6, variant==='A'?'LT':'roll ←', liga(b+'l'), variant==='A' ? (!!btn.LT&&!btn.RB) : false]);
+    if(RESPELL[b]) itens.push([0,32,'roll ↗', RESPELL[b](true)+(b==='s'?' / '+RESPELL[b](false):''), false]);
+  } else {
+    const v = NUCLEUS_BY_GATE[g];
+    if(v==='—'){ host.innerHTML=''; return; }
+    const nas = v==='a' ? 'ã' : (v==='o'||v==='ó') ? 'õ' : v+'n';
+    itens.push([0,-30, variant==='A'?'R3':'LT', nas, !!nasal]);
+    itens.push([-38,6,'roll ↖', v+'i', false]);
+    itens.push([38,6, 'roll ↗', v+'u', false]);
+  }
+
+  host.innerHTML = itens.map(([dx,dy,trig,res,on])=>{
+    const px = Math.max(30, Math.min(270, x+dx)), py = y+dy;
+    const cor = on ? 'var(--hot)' : 'var(--muted)';
+    return `<text x="${px}" y="${py}" text-anchor="middle" font-family="IBM Plex Mono, monospace"
+              font-size="11" fill="${cor}" opacity="${on?1:.75}">${trig} <tspan font-size="14"
+              fill="${on?'var(--hot)':'var(--ink)'}">${res}</tspan></text>`;
+  }).join('');
 }
 
 function paintWheel(side, axes){
@@ -378,6 +463,28 @@ function paintWheel(side, axes){
     else if(idx>0){ t.setAttribute('fill','var(--hot)'); }
     else t.setAttribute('fill','var(--muted)');
   }
+}
+
+// ---------------------------------------------------------------- HUD
+// Shows every input as it is pressed, so a screen recording explains itself:
+// the viewer sees what was pushed and what came out, in the same frame.
+let hudCache = '';
+function renderHud(){
+  const dir = side => { const gs = stick[side].gates;
+    return gs.length ? gs.map(g=>DIRNAME[g]).join('') : '·'; };
+  const grupos = [
+    [['L', dir('L'), stick.L.gates.length>0, 'st'],
+     ['R', dir('R'), stick.R.gates.length>0, 'st']],
+    [['LB','',btn.LB],['LT','',btn.LT],['RB','',btn.RB],
+     ['RT','',btn.RT],['L3','',btn.L3],['R3','',btn.R3]],
+    [['A','',lit('A')],['B','',lit('B')],['X','',lit('X')],['Y','',lit('Y')]],
+    [['✛↑','',lit('up')],['✛→','',lit('right')],
+     ['✛↓','',lit('down')],['✛←','',lit('left')]]
+  ];
+  const html = grupos.map(g => g.map(([nome,val,on,cls])=>
+    `<span class="k ${cls||''} ${on?'on':''}">${nome}${val?' <b>'+val+'</b>':''}</span>`
+  ).join('')).join('<span class="sep"></span>');
+  if(html!==hudCache){ hudCache=html; document.getElementById('hud').innerHTML = html; }
 }
 
 // ---------------------------------------------------------------- render
@@ -498,8 +605,12 @@ function dpad(now){
 }
 
 function faceButtons(pad){
-  dpad({up:    pad.buttons[12]?.pressed?1:0, down: pad.buttons[13]?.pressed?1:0,
-        left:  pad.buttons[14]?.pressed?1:0, right:pad.buttons[15]?.pressed?1:0});
+  const d = {up:    pad.buttons[12]?.pressed?1:0, down: pad.buttons[13]?.pressed?1:0,
+             left:  pad.buttons[14]?.pressed?1:0, right:pad.buttons[15]?.pressed?1:0};
+  Object.assign(held, d,
+    {A:pad.buttons[0]?.pressed?1:0, B:pad.buttons[1]?.pressed?1:0,
+     X:pad.buttons[2]?.pressed?1:0, Y:pad.buttons[3]?.pressed?1:0});
+  dpad(d);
   const now = {A:pad.buttons[0]?.pressed?1:0, B:pad.buttons[1]?.pressed?1:0,
                X:pad.buttons[2]?.pressed?1:0, Y:pad.buttons[3]?.pressed?1:0};
   if(atRest()){
@@ -549,6 +660,8 @@ function poll(){
   if(btn.RT && !prev.RT) commit();
   prev.RT = btn.RT;
 
+  satellites('l'); satellites('r');
+  renderHud();
   render();
   requestAnimationFrame(poll);
 }
@@ -566,14 +679,14 @@ addEventListener('keydown',e=>{
   if(KEYVEC[e.code] && !e.shiftKey){ const[,x,y]=KEYVEC[e.code]; const s=KEYVEC[e.code][0]; kb[s]=[x,y]; e.preventDefault(); }
   if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=1;
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
-  if(e.code==='Enter'){ text+=finish(word)+' '; word=''; }
-  if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); e.preventDefault(); }
-  if(e.code==='ArrowUp'){    accentLast(CIRC);  e.preventDefault(); }
-  if(e.code==='ArrowRight'){ accentLast(ACUTE); e.preventDefault(); }
-  if(e.code==='ArrowLeft'){  accentLast(GRAVE); e.preventDefault(); }
-  if(e.code==='ArrowDown'){  toggleSibilant();  e.preventDefault(); }
-  if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; }
-  if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; }
+  if(e.code==='Enter'){ text+=finish(word)+' '; word=''; flash('A'); }
+  if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); flash('B'); e.preventDefault(); }
+  if(e.code==='ArrowUp'){    accentLast(CIRC);  flash('up');    e.preventDefault(); }
+  if(e.code==='ArrowRight'){ accentLast(ACUTE); flash('right'); e.preventDefault(); }
+  if(e.code==='ArrowLeft'){  accentLast(GRAVE); flash('left');  e.preventDefault(); }
+  if(e.code==='ArrowDown'){  toggleSibilant();  flash('down');  e.preventDefault(); }
+  if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; flash('X'); }
+  if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; flash('Y'); }
 });
 addEventListener('keyup',e=>{
   if(KEYVEC[e.code]){ kb[KEYVEC[e.code][0]]=[0,0]; }
