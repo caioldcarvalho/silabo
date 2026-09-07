@@ -156,9 +156,18 @@ modificador faria e qual gatilho o produz** — e o gatilho muda entre as
 variantes (na A a líquida é botão, na B é movimento), que é justamente a parte
 confusa de aprender. Clusters que o português não admite não são oferecidos.
 
-No topo, um HUD acende **cada entrada enquanto é pressionada**, incluindo o roll
-dos analógicos, para que uma gravação de tela se explique sozinha: quem assiste
-vê o que foi apertado e o que saiu, no mesmo quadro.
+No topo há um **desenho do controle** que acende em vermelho o que está sendo
+pressionado, com os analógicos defletindo de verdade e oito pontos ao redor de
+cada base marcando os gates **visitados** — o de origem em branco, os do roll em
+vermelho, porque um roll é uma sequência e uma posição só não a mostra. Serve à
+gravação de tela: quem assiste vê o polegar e os botões no mesmo quadro que o
+texto que saiu.
+
+Para conferir o desenho sem abrir o navegador (precisa de `rsvg-convert`):
+
+```fish
+node tools/pad-preview.mjs
+```
 
 Duas suítes de regressão, sem dependências:
 
