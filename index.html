@@ -147,8 +147,15 @@ const VOICED = {t:'d',s:'z',m:'n',l:'r',c:'g',p:'b',f:'v',x:'j'};
 const NUCLEUS_BY_GATE = {7:'i',1:'u',6:'e',2:'o',5:'é',3:'ó',4:'a',0:'—'};
 const GLIDE = {i:'i',u:'u',e:'i',o:'u','é':'i','ó':'u',a:'a'};
 
-// clusters that are illegal in PT → reused as digraphs
+// Two different reuses of illegal PT clusters — kept apart on purpose.
+// DIGRAPH: the cluster stands for a DIFFERENT PHONEME (/ɲ/ /ʎ/ /ʀ/) → belongs
+// to the phoneme resolver, survives a change of language.
 const DIGRAPH = {'nr':'nh','lr':'lh','rr':'rr','mr':'nh'};
+// SPELLING: same consonant, other spelling. Portuguese is not phonemic enough
+// for the grapheme to be a function of the phoneme ("sela"/"cela" are
+// homophones), so the user picks it. Belongs to the ORTHOGRAPHER — a different
+// language replaces this table wholesale.
+const SPELLING = {'sr':'c','sl':'ç','jr':'g','zl':'s'};
 
 // ---------------------------------------------------------------- state
 let variant = 'A';
@@ -197,18 +204,32 @@ function buildOnset(){
     if(!btn.RB){ if(btn.LB) liq='r'; else if(btn.LT) liq='l'; }
   } else {
     // roll: second gate read on the liquid axis — ← is l, → is r
-    if(gs.length>1){
-      const t = gs[gs.length-1];
+    const mk = landmarks(gs);
+    if(mk.length>1){
+      const t = mk[mk.length-1];
       if(t===6) liq='l'; else if(t===2) liq='r';
     }
   }
   if(!liq) return base;
   const pair = base+liq;
+  // SPELLING pairs are handed to the orthographer raw, on purpose
   return DIGRAPH[pair] || pair;
 }
 
+// A roll along the rim crosses every gate in between, and those are travel,
+// not intent. Keep only the first gate, the last, and the points where the
+// direction of rotation REVERSES — a discrete event, no timing involved.
+function landmarks(gs){
+  if(gs.length<2) return gs.slice();
+  const step = i => { let d=gs[i+1]-gs[i]; if(d>4)d-=8; if(d<-4)d+=8; return Math.sign(d); };
+  const out=[gs[0]];
+  for(let i=1;i<gs.length-1;i++) if(step(i)!==step(i-1)) out.push(gs[i]);
+  out.push(gs[gs.length-1]);
+  return out;
+}
+
 function buildNucleus(){
-  const gs = stick.R.gates;
+  const gs = landmarks(stick.R.gates);
   if(!gs.length) return {v:'',nasal:false};
   let v = NUCLEUS_BY_GATE[gs[0]];
   if(v==='—') return {v:'',nasal:false};
@@ -246,26 +267,52 @@ function orthograph(prevWord, syl){
   const lastCh = prevWord.slice(-1);
   const afterVowel = /[aeiouáéíóúâêôãõà]/i.test(lastCh);
 
-  // /k/ and /g/ need a mute u before front vowels
-  if(onset==='c' && front) onset='qu';
-  if(onset==='g' && front) onset='gu';
-  // intervocalic /s/ and /R/ double
-  if(onset==='s' && afterVowel) onset='ss';
-  if(onset==='r' && afterVowel) onset='rr';
-
-  let v = vowel;
-  let nasalTail = '';
-  if(nasal){
-    // ã and õ are written with a tilde; the others use a nasal consonant
-    if(firstV==='a'){ v = 'ã'+v.slice(1); }
-    else if(firstV==='o'||firstV==='ó'){ v = 'õ'+v.slice(1); }
-    else nasalTail = 'n';   // resolved against the next onset below
+  // The user spelled it out via an illegal cluster — no automatic rule applies,
+  // that is the whole point of asking explicitly.
+  const spelled = SPELLING[onset];
+  if(spelled){ onset = spelled; }
+  else {
+    // /k/ and /g/ need a mute u before front vowels
+    if(onset==='c' && front) onset='qu';
+    if(onset==='g' && front) onset='gu';
+    // intervocalic /s/ and /R/ double
+    if(onset==='s' && afterVowel) onset='ss';
+    // NOT r → rr here: intervocalic /ɾ/ is written with a single r (girafa,
+    // caro). The strong /ʀ/ has its own explicit cluster, r+r → rr.
   }
 
+  // Nasality is written as a tilde only before a vowel or at the end of a word;
+  // before a consonant Portuguese writes n/m (campo, canta — never "cãpo").
+  // Which one it is depends on what comes NEXT, so the tilde is decided later,
+  // in finish(); here the nasal is always carried as a plain /N/ archiphoneme.
+  let v = vowel;
+  const nasalTail = nasal ? 'N' : '';
+
   let out = prevWord + onset + v + nasalTail + coda;
-  // m before p / b
-  out = out.replace(/n(?=[pb])/g,'m');
   return out;
+}
+
+// Resolves the pending /N/ archiphonemes and the diphthong spellings. Runs over
+// the whole word buffer, which is what lets segmentation stay free.
+function finish(w){
+  return w
+    // é/ó are a PHONOLOGICAL distinction (sela /ɛ/ vs selo /e/) that Portuguese
+    // spelling does not mark: both are written e/o. The acute accent is
+    // post-correction on the d-pad (pé, avó, só), not a property of the gate.
+    .replace(/é/g,'e').replace(/ó/g,'o')
+    // nasal diphthongs have dedicated spellings — "ãu" does not exist in
+    // Portuguese, it is always written "ão"; same for ãe and õe
+    .replace(/auN/g,'ão').replace(/[aá]iN/g,'ãe').replace(/[oó]iN/g,'õe')
+    // /N/ before p or b → m
+    .replace(/N(?=[pb])/g,'m')
+    // tilde only on ã, and only word-finally or before the plural -s
+    // (lã, irmã, irmãs) — never before a consonant: "campo", not "cãpo"
+    .replace(/aN(?=s?$)/g,'ã')
+    // before any other letter it is a plain n (canta, sons, bens)
+    .replace(/N(?=[a-zà-ú])/gi,'n')
+    // word-finally it is m (sem, bem, um, com, bom)
+    .replace(/N$/g,'m')
+    .replace(/N/g,'n');
 }
 
 function commit(){
@@ -320,7 +367,7 @@ function paintWheel(side, axes){
 function render(){
   const s = current();
   const el = document.getElementById('syl');
-  const preview = orthograph('', s) || '';
+  const preview = finish(orthograph(word, s)).slice(finish(word).length) || '';
   el.innerHTML = preview ? preview : '<span class="dim">—</span>';
 
   const bits = [];
@@ -330,7 +377,7 @@ function render(){
   document.getElementById('parts').textContent = bits.join('   ·   ');
 
   document.getElementById('out').innerHTML =
-    escapeHtml(text+word) + '<i>&nbsp;</i>';
+    escapeHtml(text+finish(word)) + '<i>&nbsp;</i>';
 
   document.getElementById('mg').textContent = m.g;
   document.getElementById('mc').textContent = m.c;
@@ -345,16 +392,55 @@ const BINDS = {
      ['LB','+r   pr, gr, tr   ·   nr→nh'],['LT','+l   pl, cl, fl'],
      ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
      ['R3','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
-     ['RT','confirma a sílaba']],
+     ['RT','confirma a sílaba'],
+     ['— grafia —',''],
+     ['s +r','c    cebola, cidade'],['s +l','ç    ação, moço'],
+     ['j +r','g    gente, girafa'],['z +l','s    casa, mesa'],
+     ['— fora da sílaba —',''],
+     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['X','ponto final'],['Y','interrogação']],
   B:[['analógico esq.','ataque (8 direções)'],['roll no esq. →','+r   pr, gr   ·   nr→nh'],
      ['roll no esq. ←','+l   pl, cl, fl'],['LB','sonoriza  t→d  s→z  c→g'],
      ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
      ['LT','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
-     ['RT','confirma a sílaba']]
+     ['RT','confirma a sílaba'],
+     ['— grafia —',''],
+     ['s +r','c    cebola, cidade'],['s +l','ç    ação, moço'],
+     ['j +r','g    gente, girafa'],['z +l','s    casa, mesa'],
+     ['— fora da sílaba —',''],
+     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['X','ponto final'],['Y','interrogação']]
 };
 function paintBinds(){
   document.getElementById('binds').innerHTML =
     BINDS[variant].map(([k,v])=>`<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`).join('');
+}
+
+// -------------------------------------------------- buttons outside a syllable
+// Face buttons only act with BOTH sticks at rest: during typing the thumbs are
+// on the sticks, so these can never fire by accident mid-syllable.
+const face = {A:0,B:0,X:0,Y:0,heldB:0};
+function atRest(){ return stick.L.live===null && stick.R.live===null; }
+
+function endWord(suffix){ text += finish(word)+suffix; word=''; }
+
+function faceButtons(pad){
+  const now = {A:pad.buttons[0]?.pressed?1:0, B:pad.buttons[1]?.pressed?1:0,
+               X:pad.buttons[2]?.pressed?1:0, Y:pad.buttons[3]?.pressed?1:0};
+  if(atRest()){
+    // A = space · A+RB = enter
+    if(now.A && !face.A) btn.RB ? endWord('\n') : endWord(' ');
+    if(now.X && !face.X) endWord('. ');
+    if(now.Y && !face.Y) endWord('? ');
+    // B = backspace, held = delete the whole word
+    if(now.B && !face.B){ face.heldB = performance.now(); if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
+    if(now.B && face.heldB && performance.now()-face.heldB > 450){
+      face.heldB = performance.now()+1e9;   // fires once
+      if(word) word=''; else text = text.replace(/\S*\s*$/,'');
+    }
+    if(!now.B) face.heldB = 0;
+  }
+  Object.assign(face, now);
 }
 
 // ---------------------------------------------------------------- loop
@@ -375,8 +461,7 @@ function poll(){
     btn.RT = (pad.buttons[7]?.value||0)>0.5?1:0 | kbBtn.RT;
     btn.L3 = pad.buttons[10]?.pressed?1:0 | kbBtn.L3;
     btn.R3 = pad.buttons[11]?.pressed?1:0 | kbBtn.R3;
-    if(pad.buttons[0]?.pressed && !prev.A){ text += word+' '; word=''; }
-    prev.A = pad.buttons[0]?.pressed;
+    faceButtons(pad);
   } else {
     btn.LB=kbBtn.LB; btn.RB=kbBtn.RB; btn.LT=kbBtn.LT; btn.RT=kbBtn.RT;
     btn.L3=kbBtn.L3; btn.R3=kbBtn.R3;
@@ -406,8 +491,10 @@ addEventListener('keydown',e=>{
   if(KEYVEC[e.code]){ const[,x,y]=KEYVEC[e.code]; const s=KEYVEC[e.code][0]; kb[s]=[x,y]; e.preventDefault(); }
   if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=1;
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
-  if(e.code==='Enter'){ text+=word+' '; word=''; }
+  if(e.code==='Enter'){ text+=finish(word)+' '; word=''; }
   if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); e.preventDefault(); }
+  if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; }
+  if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; }
 });
 addEventListener('keyup',e=>{
   if(KEYVEC[e.code]){ kb[KEYVEC[e.code][0]]=[0,0]; }

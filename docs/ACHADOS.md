@@ -113,9 +113,81 @@ implementar.
 
 ---
 
-## 3. Gap ortográfico: `ce` e `ci`
+## 3. Gap ortográfico: `ce` e `ci` — RESOLVIDO
 
-**Sem solução ainda.** Pelo ataque `c`, a regra `/k/ + vogal frontal → qu`
+**Ideia do Caio, e é melhor que a alternativa que eu tinha proposto** (um
+ciclador de grafia no d-pad). O ciclador é pós-correção: digita errado e
+conserta, um gesto a mais. O dele é entrada direta, sai certo de primeira, sem
+botão novo e sem modo — e **generaliza o princípio que o desenho já usava**
+(`nr`→nh, `lr`→lh) em vez de inventar mecânica nova:
+
+> aproveitar clusters que **não existem** em português para gerar as grafias
+> que **faltam**.
+
+### O orçamento de slots
+
+Das 32 combinações ataque×líquida, só 13 são clusters reais em português
+(`tr cr cl pr pl fr fl dr gr gl br bl vr`) e 4 já estavam reaproveitadas
+(`nr`→nh, `lr`→lh, `rr`→rr, `mr`). **Sobram 15 buracos livres.**
+
+| gesto | grafia | resolve |
+|---|---|---|
+| `s` + `r` | **c** | /s/ antes de e,i — cebola, cidade, certo |
+| `s` + `l` | **ç** | /s/ antes de a,o,u — ação, caçar, moço |
+| `j` + `r` | **g** | /ʒ/ antes de e,i — gente, girafa, gelo |
+| `z` + `l` | **s** | /z/ grafado s — casa, mesa, coisa |
+
+Os três primeiros são do Caio. O quarto fecha o par: sem ele `z` sempre grafa
+"z" e "casa" saía "caza". Ainda sobram **11 slots** para `x`/`ch`, `h`, `k`,
+`w`, `y`, acentos.
+
+### Por que duas tabelas, e não uma
+
+`nh`/`lh`/`rr` são **fonemas** distintos (/ɲ/, /ʎ/, /ʀ/): pertencem ao
+resolvedor e sobrevivem a uma troca de língua. `c`/`ç`/`g`/`s` são **a mesma
+consoante com outra grafia**: pertencem ao ortografador, e outra língua troca a
+tabela inteira. Estão separadas no código como `DIGRAPH` e `SPELLING` por isso —
+misturar as duas faria `orthography-pt.js` nascer torto.
+
+Grafia pedida explicitamente **não passa pelas regras automáticas**: é o ponto
+inteiro de pedir. Por isso `sr`→"c" não vira "qu" antes de e/i, enquanto `c`
+sozinho continua virando.
+
+### O problema de fundo que isso contorna
+
+Em português o fonema /s/ tem quatro grafias e a escolha **não é decidível por
+regra fonotática — é lexical**: "sela"/"cela", "sinto"/"cinto" são homófonos.
+Este era o ponto onde "fonologia arranja, ortografia rotula" batia no limite de
+o português não ser fonêmico o bastante. A saída não foi um dicionário: foi
+**devolver a escolha ao usuário, de graça**, num slot que já estava vago.
+
+---
+
+## 3b. Bugs achados ao implementar o item 3
+
+### `r` intervocálico não podia ser simples
+A regra "`/R/` intervocálico dobra" impedia escrever "girafa", "caro", "hora" —
+saíam "girrafa", "carro". Era **redundante**, porque o /ʀ/ forte já tem cluster
+explícito (`r`+`r` → rr). Regra removida; `caro` e `carro` agora são gestos
+diferentes, como devem ser.
+
+### `é` e `ó` saíam acentuados
+Os gates `é`/`ó` marcam uma distinção **fonológica** real (sela /ɛ/ vs selo /e/)
+que a ortografia do português **não escreve**: ambos são `e`/`o`. O motor
+grafava o acento, então "bom" saía "bóm". Normalizado; o acento agudo continua
+sendo pós-correção no d-pad (pé, avó, só).
+
+Efeito colateral que vale registrar: isso deixa **dois dos oito gates do núcleo
+sem distinção ortográfica**. Pelo próprio princípio deste item, são dois slots
+potencialmente reaproveitáveis.
+
+---
+
+## 3c. (histórico) a proposta descartada
+
+**Ciclador de sibilante no d-pad**, percorrendo `s → ss → c → ç` na consoante
+mais recente. Descartada em favor da ideia acima: pós-correção custa um gesto
+extra e quebra o fluxo. Pelo ataque `c`, a regra `/k/ + vogal frontal → qu`
 produz "que"/"qui" (correto e frequente, vale manter). Pelo ataque `s`, sai
 "se"/"sse". **Não há caminho para "ce"/"ci"**, que são ultra comuns.
 
@@ -164,10 +236,19 @@ precisam de novo endereço.
 
 ## Agenda
 
-1. Fechar A no motor; manter B como referência histórica.
-2. Corrigir o roll (primeiro + último + inversões de sentido).
-3. Corrigir a grafia da nasal.
-4. Ligar os botões de face e o d-pad.
-5. Decidir o ciclador de sibilante para `ce`/`ci`/`ç`.
-6. Em aberto: labialização no ataque (`qu`/`gu` + ditongo), e como pagar menos
-   caro pelo L3/R3.
+**Feito** (35 testes em `test/motor.test.mjs`, `node test/motor.test.mjs`):
+- roll corrigido — primeiro, último e inversões de sentido
+- grafia da nasal corrigida — cantar, campo, sem, com, irmãs, sons
+- ditongos nasais — ão, ãe, õe
+- grafia por cluster ilegal — c, ç, g, s
+- `r` intervocálico simples; `é`/`ó` normalizados
+- botões de face: A espaço, A+RB enter, B backspace, X ponto, Y interrogação
+
+**Em aberto:**
+1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
+2. D-pad: acentos e o resto da pontuação.
+3. Onde vão maiúscula e o modo letra-a-letra, que eram X e Y.
+4. Labialização no ataque (`qu`/`gu` + ditongo → Uruguai, quais).
+5. Como pagar menos caro pelo L3/R3 — 7 funções em 3 botões.
+6. Reaproveitar os slots livres restantes: `x`/`ch`, `h`, `k`, `w`, `y`, e
+   possivelmente os dois gates de núcleo sem distinção ortográfica.
