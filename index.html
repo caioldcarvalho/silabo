@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sílabo — protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#151920;
+  --panel:#1D232C;
+  --line:#2C333E;
+  --ink:#E6E9ED;
+  --muted:#87919F;
+  --left:#E8A33D;
+  --right:#57C6BD;
+  --hot:#F2603C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Space Grotesk",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  padding:24px;
+  max-width:1180px;
+  margin:0 auto;
+}
+h1{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--muted);font-weight:400}
+header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+#status{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
+#status.on{color:var(--right)}
+
+.variants{display:flex;gap:8px;margin-left:auto}
+.variants button{
+  font-family:inherit;font-size:13px;font-weight:500;
+  background:transparent;color:var(--muted);
+  border:1px solid var(--line);border-radius:2px;
+  padding:6px 14px;cursor:pointer;transition:none;
+}
+.variants button.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.variants button:focus-visible{outline:2px solid var(--right);outline-offset:2px}
+
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.wheel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px}
+.wheel h2{font-size:13px;font-weight:500;margin:0 0 10px;color:var(--muted)}
+.wheel h2 b{color:var(--ink);font-weight:500}
+svg{display:block;width:100%;height:auto}
+
+.readout{
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:18px;margin-bottom:20px;
+}
+#syl{
+  font-family:"IBM Plex Mono",monospace;font-size:34px;font-weight:500;
+  letter-spacing:.02em;min-height:46px;color:var(--hot);
+}
+#syl .dim{color:var(--line)}
+#parts{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);min-height:18px}
+#out{
+  font-family:"IBM Plex Mono",monospace;font-size:19px;line-height:1.6;
+  border-top:1px solid var(--line);margin-top:14px;padding-top:14px;
+  min-height:66px;white-space:pre-wrap;word-break:break-word;
+}
+#out i{font-style:normal;background:var(--hot);color:var(--bg);animation:c 1s steps(2) infinite}
+@keyframes c{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#out i{animation:none}}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px}
+.card h3{font-size:13px;font-weight:500;margin:0 0 12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:4px 0;vertical-align:top}
+td.k{font-family:"IBM Plex Mono",monospace;color:var(--muted);width:44%;white-space:nowrap}
+td.v{font-family:"IBM Plex Mono",monospace}
+.big{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:500}
+.big small{display:block;font-size:11px;color:var(--muted);font-weight:400;font-family:"Space Grotesk",sans-serif}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.reset{font-family:inherit;font-size:12px;background:transparent;color:var(--muted);
+  border:1px solid var(--line);border-radius:2px;padding:5px 10px;cursor:pointer;margin-top:12px}
+.reset:focus-visible{outline:2px solid var(--right);outline-offset:2px}
+p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
+@media(max-width:820px){.stage,.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sílabo <span>protótipo 0.1</span></h1>
+  <div id="status">nenhum controle detectado — aperte um botão</div>
+  <div class="variants">
+    <button id="vA" class="sel">A · modificador</button>
+    <button id="vB">B · roll</button>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="wheel">
+    <h2>Analógico esquerdo — <b>ataque</b></h2>
+    <svg id="wl" viewBox="0 0 300 300" aria-label="Roda de consoantes"></svg>
+  </div>
+  <div class="wheel">
+    <h2>Analógico direito — <b>núcleo</b></h2>
+    <svg id="wr" viewBox="0 0 300 300" aria-label="Roda de vogais"></svg>
+  </div>
+</div>
+
+<div class="readout">
+  <div id="syl"><span class="dim">—</span></div>
+  <div id="parts"></div>
+  <div id="out"><i>&nbsp;</i></div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h3>Botões nesta variante</h3>
+    <table id="binds"></table>
+  </div>
+  <div class="card">
+    <h3>Medição</h3>
+    <div class="metrics">
+      <div class="big"><span id="mg">0</span><small>gestos</small></div>
+      <div class="big"><span id="mc">0</span><small>caracteres</small></div>
+      <div class="big"><span id="mr">—</span><small>caracteres por gesto</small></div>
+      <div class="big"><span id="mt">—</span><small>ms por caractere</small></div>
+    </div>
+    <button class="reset" id="rs">Zerar medição</button>
+  </div>
+</div>
+
+<p class="note">Teclado para testar sem controle: <b>W A S D</b> + <b>Q E Z C</b> movem o analógico esquerdo, <b>I J K L</b> + <b>U O M .</b> movem o direito, <b>Espaço</b> confirma a sílaba. <b>1</b> e <b>2</b> são LB e LT, <b>3</b> é RB, <b>4</b> e <b>5</b> são L3 e R3.</p>
+
+<script>
+// ---------------------------------------------------------------- gates
+// 0=↑ 1=↗ 2=→ 3=↘ 4=↓ 5=↙ 6=← 7=↖
+const DIRNAME = ['↑','↗','→','↘','↓','↙','←','↖'];
+
+const ONSET  = ['t','s','m','l','c','p','f','x'];        // by gate 0..7 reordered below
+const ONSET_BY_GATE = {0:'t',2:'s',4:'m',6:'l',1:'c',3:'p',5:'f',7:'x'};
+const VOICED = {t:'d',s:'z',m:'n',l:'r',c:'g',p:'b',f:'v',x:'j'};
+
+const NUCLEUS_BY_GATE = {7:'i',1:'u',6:'e',2:'o',5:'é',3:'ó',4:'a',0:'—'};
+const GLIDE = {i:'i',u:'u',e:'i',o:'u','é':'i','ó':'u',a:'a'};
+
+// clusters that are illegal in PT → reused as digraphs
+const DIGRAPH = {'nr':'nh','lr':'lh','rr':'rr','mr':'nh'};
+
+// ---------------------------------------------------------------- state
+let variant = 'A';
+let pad = null;
+
+const stick = {
+  L:{gates:[],live:null},
+  R:{gates:[],live:null}
+};
+const btn = {LB:0,LT:0,RB:0,RT:0,L3:0,R3:0};
+const prev = {RT:0};
+
+let word = '';      // current word buffer (already orthographed)
+let text = '';      // committed text
+let m = {g:0,c:0,t0:0};
+
+// ---------------------------------------------------------------- geometry
+function gateOf(x,y,current){
+  const r = Math.hypot(x,y);
+  const enter = 0.55, exit = 0.38;
+  if(r < (current===null?enter:exit)) return null;
+  let a = Math.atan2(x,-y);              // 0 = up, clockwise
+  if(a<0) a += Math.PI*2;
+  return Math.round(a/(Math.PI/4)) % 8;
+}
+
+function track(side,x,y){
+  const s = stick[side];
+  const g = gateOf(x,y,s.live);
+  if(g === s.live) return;
+  if(g === null){ s.live = null; s.gates = []; return; }   // back to center resets
+  s.live = g;
+  if(s.gates[s.gates.length-1] !== g) s.gates.push(g);
+}
+
+// ---------------------------------------------------------------- assembly
+function buildOnset(){
+  const gs = stick.L.gates;
+  if(!gs.length) return '';
+  let base = ONSET_BY_GATE[gs[0]];
+  const voiced = variant==='A' ? btn.L3 : btn.LB;
+  if(voiced) base = VOICED[base];
+
+  let liq = '';
+  if(variant==='A'){
+    if(!btn.RB){ if(btn.LB) liq='r'; else if(btn.LT) liq='l'; }
+  } else {
+    // roll: second gate read on the liquid axis — ← is l, → is r
+    if(gs.length>1){
+      const t = gs[gs.length-1];
+      if(t===6) liq='l'; else if(t===2) liq='r';
+    }
+  }
+  if(!liq) return base;
+  const pair = base+liq;
+  return DIGRAPH[pair] || pair;
+}
+
+function buildNucleus(){
+  const gs = stick.R.gates;
+  if(!gs.length) return {v:'',nasal:false};
+  let v = NUCLEUS_BY_GATE[gs[0]];
+  if(v==='—') return {v:'',nasal:false};
+  for(let i=1;i<gs.length;i++){
+    const n = NUCLEUS_BY_GATE[gs[i]];
+    if(n && n!=='—') v += GLIDE[n];
+  }
+  const nasal = variant==='A' ? !!btn.R3 : !!btn.LT;
+  return {v,nasal};
+}
+
+function buildCoda(){
+  if(!btn.RB) return '';
+  if(btn.LB) return 'r';
+  if(btn.LT) return 'l';
+  return 's';
+}
+
+function current(){
+  const o = buildOnset();
+  const {v,nasal} = buildNucleus();
+  const c = buildCoda();
+  return {onset:o,vowel:v,nasal,coda:c};
+}
+
+// ---------------------------------------------------------------- orthography
+// operates on the whole word buffer, not on the syllable — this is what lets
+// segmentation be free (ca.mpo and cam.po must both produce "campo")
+function orthograph(prevWord, syl){
+  let {onset,vowel,nasal,coda} = syl;
+  if(!onset && !vowel && !coda) return prevWord;
+
+  const firstV = vowel[0] || '';
+  const front = (firstV==='e'||firstV==='é'||firstV==='i');
+  const lastCh = prevWord.slice(-1);
+  const afterVowel = /[aeiouáéíóúâêôãõà]/i.test(lastCh);
+
+  // /k/ and /g/ need a mute u before front vowels
+  if(onset==='c' && front) onset='qu';
+  if(onset==='g' && front) onset='gu';
+  // intervocalic /s/ and /R/ double
+  if(onset==='s' && afterVowel) onset='ss';
+  if(onset==='r' && afterVowel) onset='rr';
+
+  let v = vowel;
+  let nasalTail = '';
+  if(nasal){
+    // ã and õ are written with a tilde; the others use a nasal consonant
+    if(firstV==='a'){ v = 'ã'+v.slice(1); }
+    else if(firstV==='o'||firstV==='ó'){ v = 'õ'+v.slice(1); }
+    else nasalTail = 'n';   // resolved against the next onset below
+  }
+
+  let out = prevWord + onset + v + nasalTail + coda;
+  // m before p / b
+  out = out.replace(/n(?=[pb])/g,'m');
+  return out;
+}
+
+function commit(){
+  const syl = current();
+  if(!syl.onset && !syl.vowel && !syl.coda) return;
+  const before = word;
+  word = orthograph(word, syl);
+  const gained = word.length - before.length;
+  if(gained>0){ m.c += gained; }
+  m.g++;
+  if(!m.t0) m.t0 = performance.now();
+  render();
+}
+
+// ---------------------------------------------------------------- wheels
+function drawWheel(el, map, accent, side){
+  const R=132, cx=150, cy=150;
+  let s = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--line)"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="46" fill="none" stroke="var(--line)"/>`;
+  for(let i=0;i<8;i++){
+    const a = i*Math.PI/4 - Math.PI/2;
+    s += `<line x1="${cx+Math.cos(a+Math.PI/8)*46}" y1="${cy+Math.sin(a+Math.PI/8)*46}"
+              x2="${cx+Math.cos(a+Math.PI/8)*R}" y2="${cy+Math.sin(a+Math.PI/8)*R}"
+              stroke="var(--line)" stroke-width="1"/>`;
+  }
+  for(let i=0;i<8;i++){
+    const a = i*Math.PI/4 - Math.PI/2;
+    const x = cx+Math.cos(a)*92, y = cy+Math.sin(a)*92;
+    s += `<text id="${side}${i}" x="${x}" y="${y+9}" text-anchor="middle"
+            font-family="IBM Plex Mono, monospace" font-size="26" fill="var(--muted)">${map[i]}</text>`;
+  }
+  s += `<circle id="${side}dot" cx="${cx}" cy="${cy}" r="7" fill="${accent}"/>`;
+  el.innerHTML = s;
+}
+
+function paintWheel(side, axes){
+  const cx=150, cy=150;
+  const dot = document.getElementById(side+'dot');
+  if(dot){ dot.setAttribute('cx', cx+axes[0]*104); dot.setAttribute('cy', cy+axes[1]*104); }
+  const gs = stick[side==='l'?'L':'R'].gates;
+  for(let i=0;i<8;i++){
+    const t = document.getElementById(side+i);
+    if(!t) continue;
+    const idx = gs.indexOf(i);
+    if(idx===0){ t.setAttribute('fill', side==='l'?'var(--left)':'var(--right)'); }
+    else if(idx>0){ t.setAttribute('fill','var(--hot)'); }
+    else t.setAttribute('fill','var(--muted)');
+  }
+}
+
+// ---------------------------------------------------------------- render
+function render(){
+  const s = current();
+  const el = document.getElementById('syl');
+  const preview = orthograph('', s) || '';
+  el.innerHTML = preview ? preview : '<span class="dim">—</span>';
+
+  const bits = [];
+  if(s.onset) bits.push('ataque '+s.onset);
+  if(s.vowel) bits.push('núcleo '+s.vowel+(s.nasal?' nasal':''));
+  if(s.coda) bits.push('coda -'+s.coda);
+  document.getElementById('parts').textContent = bits.join('   ·   ');
+
+  document.getElementById('out').innerHTML =
+    escapeHtml(text+word) + '<i>&nbsp;</i>';
+
+  document.getElementById('mg').textContent = m.g;
+  document.getElementById('mc').textContent = m.c;
+  document.getElementById('mr').textContent = m.g ? (m.c/m.g).toFixed(2) : '—';
+  const dt = m.t0 ? performance.now()-m.t0 : 0;
+  document.getElementById('mt').textContent = (m.c>1&&dt) ? Math.round(dt/m.c) : '—';
+}
+function escapeHtml(t){return t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+const BINDS = {
+  A:[['analógico esq.','ataque (8 direções)'],['L3','sonoriza  t→d  s→z  c→g'],
+     ['LB','+r   pr, gr, tr   ·   nr→nh'],['LT','+l   pl, cl, fl'],
+     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
+     ['R3','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
+     ['RT','confirma a sílaba']],
+  B:[['analógico esq.','ataque (8 direções)'],['roll no esq. →','+r   pr, gr   ·   nr→nh'],
+     ['roll no esq. ←','+l   pl, cl, fl'],['LB','sonoriza  t→d  s→z  c→g'],
+     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
+     ['LT','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
+     ['RT','confirma a sílaba']]
+};
+function paintBinds(){
+  document.getElementById('binds').innerHTML =
+    BINDS[variant].map(([k,v])=>`<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`).join('');
+}
+
+// ---------------------------------------------------------------- loop
+const kb = {L:[0,0],R:[0,0]};
+function poll(){
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  pad = [...pads].find(p=>p);
+  const st = document.getElementById('status');
+  if(pad){ st.textContent = pad.id.slice(0,42); st.className='on'; }
+
+  let lx=kb.L[0], ly=kb.L[1], rx=kb.R[0], ry=kb.R[1];
+  if(pad){
+    lx += pad.axes[0]||0; ly += pad.axes[1]||0;
+    rx += pad.axes[2]||0; ry += pad.axes[3]||0;
+    btn.LB = pad.buttons[4]?.pressed?1:0 | kbBtn.LB;
+    btn.RB = pad.buttons[5]?.pressed?1:0 | kbBtn.RB;
+    btn.LT = (pad.buttons[6]?.value||0)>0.5?1:0 | kbBtn.LT;
+    btn.RT = (pad.buttons[7]?.value||0)>0.5?1:0 | kbBtn.RT;
+    btn.L3 = pad.buttons[10]?.pressed?1:0 | kbBtn.L3;
+    btn.R3 = pad.buttons[11]?.pressed?1:0 | kbBtn.R3;
+    if(pad.buttons[0]?.pressed && !prev.A){ text += word+' '; word=''; }
+    prev.A = pad.buttons[0]?.pressed;
+  } else {
+    btn.LB=kbBtn.LB; btn.RB=kbBtn.RB; btn.LT=kbBtn.LT; btn.RT=kbBtn.RT;
+    btn.L3=kbBtn.L3; btn.R3=kbBtn.R3;
+  }
+
+  track('L',lx,ly); track('R',rx,ry);
+  paintWheel('l',[Math.max(-1,Math.min(1,lx)),Math.max(-1,Math.min(1,ly))]);
+  paintWheel('r',[Math.max(-1,Math.min(1,rx)),Math.max(-1,Math.min(1,ry))]);
+
+  if(btn.RT && !prev.RT) commit();
+  prev.RT = btn.RT;
+
+  render();
+  requestAnimationFrame(poll);
+}
+
+// ---------------------------------------------------------------- keyboard fallback
+const kbBtn = {LB:0,LT:0,RB:0,RT:0,L3:0,R3:0};
+const KEYVEC = {
+  KeyW:['L',0,-1],KeyS:['L',0,1],KeyA:['L',-1,0],KeyD:['L',1,0],
+  KeyQ:['L',-.75,-.75],KeyE:['L',.75,-.75],KeyZ:['L',-.75,.75],KeyC:['L',.75,.75],
+  KeyI:['R',0,-1],KeyK:['R',0,1],KeyJ:['R',-1,0],KeyL:['R',1,0],
+  KeyU:['R',-.75,-.75],KeyO:['R',.75,-.75],KeyM:['R',-.75,.75],Period:['R',.75,.75]
+};
+const KEYBTN = {Digit1:'LB',Digit2:'LT',Digit3:'RB',Digit4:'L3',Digit5:'R3'};
+addEventListener('keydown',e=>{
+  if(KEYVEC[e.code]){ const[,x,y]=KEYVEC[e.code]; const s=KEYVEC[e.code][0]; kb[s]=[x,y]; e.preventDefault(); }
+  if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=1;
+  if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
+  if(e.code==='Enter'){ text+=word+' '; word=''; }
+  if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); e.preventDefault(); }
+});
+addEventListener('keyup',e=>{
+  if(KEYVEC[e.code]){ kb[KEYVEC[e.code][0]]=[0,0]; }
+  if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=0;
+  if(e.code==='Space') kbBtn.RT=0;
+});
+
+// ---------------------------------------------------------------- boot
+document.getElementById('vA').onclick=()=>setVariant('A');
+document.getElementById('vB').onclick=()=>setVariant('B');
+function setVariant(v){
+  variant=v;
+  document.getElementById('vA').classList.toggle('sel',v==='A');
+  document.getElementById('vB').classList.toggle('sel',v==='B');
+  paintBinds(); resetMetrics();
+}
+document.getElementById('rs').onclick=resetMetrics;
+function resetMetrics(){ m={g:0,c:0,t0:0}; render(); }
+
+drawWheel(document.getElementById('wl'),
+  [0,1,2,3,4,5,6,7].map(i=>ONSET_BY_GATE[i]), 'var(--left)','l');
+drawWheel(document.getElementById('wr'),
+  [0,1,2,3,4,5,6,7].map(i=>NUCLEUS_BY_GATE[i]), 'var(--right)','r');
+paintBinds();
+addEventListener('gamepadconnected',()=>{});
+poll();
+</script>
+</body>
+</html>
