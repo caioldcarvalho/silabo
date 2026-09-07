@@ -46,7 +46,7 @@ enxergá-lo. Sem controle, dá para testar pelo teclado:
 | `Enter` | fecha a palavra |
 | `Backspace` | apaga |
 | `Shift+.` / `Shift+/` | ponto final / interrogação |
-| setas `↑ → ←` | circunflexo, agudo, crase |
+| setas `→` / `←` | cicla o acento da última vogal |
 | seta `↓` | alterna s ↔ z |
 
 No controle, fora da sílaba (analógicos em repouso): **A** = espaço, **A+RB** =
@@ -98,9 +98,18 @@ degrada para o gate simples, não vira erro.
 `c` vs `ç` **não é um segundo endereço**: ⟨ç⟩ nunca ocorre antes de e/i, então a
 vogal decide. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
 
-**D-pad — pós-correção** sobre o que já está escrito: ↑ circunflexo (ê ô â) ·
-→ agudo (á í ú) · ← crase · ↓ alterna `s`↔`z` na última sibilante intervocálica
-(faser → fazer).
+**D-pad — pós-correção** sobre o que já está escrito. O acento **cicla** na
+última vogal em vez de ser aplicado: `→` avança, `←` volta, e cada vogal só
+oferece os acentos que ela aceita.
+
+```
+a → á → â → ã → à → a        e → é → ê → e        o → ó → ô → õ → o
+```
+
+Sempre reversível e sempre volta à vogal nua — com três botões de disparo único
+não havia como desfazer: apertar de novo caminhava para a vogal *anterior* e
+acentuava aquela. `↓` alterna `s`↔`z` na última sibilante intervocálica
+(faser → fazer). `↑` está livre.
 
 `é` e `ó` têm gate próprio e saem acentuados como o rótulo promete — o d-pad
 cobre o resto. Medido: **10,7% dos tokens** carregam vogal acentuada, caro

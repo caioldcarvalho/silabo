@@ -345,6 +345,13 @@ controle (`id`, `mapping`, nº de botões e eixos) vai junto, o que permite
 diagnosticar um d-pad morto pelo log em vez de por adivinhação. Baixa em JSON
 pelo painel de medição.
 
+**Acento vira ciclo (07/09).** Relato: *"os acentos eu digitei a mais com d-pad
+e dps n consegui voltar"*. A causa: `accentLast` procurava a última vogal **que
+estava no mapa do acento** — uma vogal já acentuada não está, então o segundo
+toque pulava para a vogal **anterior** e acentuava aquela. Não havia volta.
+Agora `→` avança e `←` retrocede num ciclo fechado por vogal
+(`a á â ã à` · `e é ê` · `o ó ô õ`), reversível por construção. Sobrou o `↑`.
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,

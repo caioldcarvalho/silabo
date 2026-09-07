@@ -378,6 +378,7 @@ function finish(w){
     // Portuguese, it is always written "ão"; same for ãe and õe
     .replace(/auN/g,'ão').replace(/[aá]iN/g,'ãe').replace(/[oó]iN/g,'õe')
     // /N/ before p or b → m
+    .replace(/([ãõ])N/g,'$1')          // tilde typed by hand on an already nasal vowel
     .replace(/N(?=[pb])/g,'m')
     // tilde only on ã, and only word-finally or before the plural -s
     // (lã, irmã, irmãs) — never before a consonant: "campo", not "cãpo"
@@ -616,8 +617,9 @@ const BINDS = {
      ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
      ['  j → ↗','g    gente, girafa'],
      ['— d-pad (pós-correção) —',''],
-     ['↑ / → / ←','ê ô â  ·  é ó á  ·  à'],
-     ['↓','s ↔ z   casa / faser→fazer'],
+     ['→ / ←','cicla o acento da última vogal'],
+     ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
+     ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
      ['X','ponto final'],['Y','interrogação']],
@@ -631,8 +633,9 @@ const BINDS = {
      ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
      ['  j → ↗','g    gente, girafa'],
      ['— d-pad (pós-correção) —',''],
-     ['↑ / → / ←','ê ô â  ·  é ó á  ·  à'],
-     ['↓','s ↔ z   casa / faser→fazer'],
+     ['→ / ←','cicla o acento da última vogal'],
+     ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
+     ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
      ['X','ponto final'],['Y','interrogação']]
@@ -657,9 +660,15 @@ function endWord(suffix){
 // they are lexical and cannot be derived; the ↓ slot used to be cedilla and is
 // free now that c/ç is a rule — so it absorbs exactly the residue that rule
 // created: the marked ⟨z⟩.
-const ACUTE = {a:'á',e:'é',i:'í',o:'ó',u:'ú'};
-const CIRC  = {a:'â',e:'ê',i:'î',o:'ô',u:'û'};
-const GRAVE = {a:'à'};
+// The accent CYCLES instead of being applied. Three one-shot buttons had no way
+// back: pressing again did not undo, it walked to the PREVIOUS vowel and
+// accented that one instead. A cycle is reversible by construction and always
+// returns to the bare vowel, and each vowel only offers the accents it can
+// actually take.
+const CICLO = { a:['a','á','â','ã','à'], e:['e','é','ê'], i:['i','í'],
+                o:['o','ó','ô','õ'],     u:['u','ú'] };
+const BASE_DE = {};
+for(const [b,arr] of Object.entries(CICLO)) for(const ch of arr) BASE_DE[ch]=b;
 const dpadPrev = {up:0,down:0,left:0,right:0};
 
 function editBuffer(fn){
@@ -669,14 +678,22 @@ function editBuffer(fn){
   if(emWord) word = w; else text = w;
 }
 
-function accentLast(map){
+// dir = +1 next accent, -1 previous. Acts on the last vowel of the buffer.
+function cycleAccent(dir){
+  let virou = null;
   editBuffer(w => {
     for(let i=w.length-1;i>=0;i--){
-      const ch = w[i].toLowerCase();
-      if(map[ch]) return w.slice(0,i)+map[ch]+w.slice(i+1);
+      const base = BASE_DE[w[i].toLowerCase()];
+      if(!base) continue;
+      const arr = CICLO[base];
+      const j = arr.indexOf(w[i].toLowerCase());
+      const k = (j + dir + arr.length) % arr.length;
+      virou = arr[k];
+      return w.slice(0,i) + arr[k] + w.slice(i+1);
     }
     return null;
   });
+  return virou;
 }
 
 // flips the last INTERVOCALIC single sibilant: casa ↔ caza, faser ↔ fazer.
@@ -694,10 +711,9 @@ function toggleSibilant(){
 
 function dpad(now){
   if(!atRest()) { Object.assign(dpadPrev, now); return; }
-  if(now.up    && !dpadPrev.up)   { accentLast(CIRC);  tlog('dpad',{op:'circunflexo', virou:finish(word)||text.slice(-14)}); }
-  if(now.right && !dpadPrev.right) { accentLast(ACUTE); tlog('dpad',{op:'agudo',       virou:finish(word)||text.slice(-14)}); }
-  if(now.left  && !dpadPrev.left)  { accentLast(GRAVE); tlog('dpad',{op:'crase',       virou:finish(word)||text.slice(-14)}); }
-  if(now.down  && !dpadPrev.down)  { toggleSibilant();  tlog('dpad',{op:'s↔z',         virou:finish(word)||text.slice(-14)}); }
+  if(now.right && !dpadPrev.right){ const v=cycleAccent(+1); tlog('dpad',{op:'acento→', vogal:v, virou:finish(word)||text.slice(-14)}); }
+  if(now.left  && !dpadPrev.left) { const v=cycleAccent(-1); tlog('dpad',{op:'acento←', vogal:v, virou:finish(word)||text.slice(-14)}); }
+  if(now.down  && !dpadPrev.down) { toggleSibilant();        tlog('dpad',{op:'s↔z',     virou:finish(word)||text.slice(-14)}); }
   Object.assign(dpadPrev, now);
 }
 
@@ -797,10 +813,9 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
   if(e.code==='Enter'){ text+=finish(word)+' '; word=''; flash('A'); }
   if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); flash('B'); e.preventDefault(); }
-  if(e.code==='ArrowUp'){    accentLast(CIRC);  flash('up');    e.preventDefault(); }
-  if(e.code==='ArrowRight'){ accentLast(ACUTE); flash('right'); e.preventDefault(); }
-  if(e.code==='ArrowLeft'){  accentLast(GRAVE); flash('left');  e.preventDefault(); }
-  if(e.code==='ArrowDown'){  toggleSibilant();  flash('down');  e.preventDefault(); }
+  if(e.code==='ArrowRight'){ cycleAccent(+1); flash('right'); e.preventDefault(); }
+  if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
+  if(e.code==='ArrowDown'){  toggleSibilant(); flash('down');  e.preventDefault(); }
   if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; flash('X'); }
   if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; flash('Y'); }
 });

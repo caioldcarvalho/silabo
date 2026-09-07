@@ -17,7 +17,8 @@ const store = {};
 const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
-                   commit, tele, tlogPad, current};`
+                   commit, tele, tlogPad, current, cycleAccent, toggleSibilant,
+                   setWord:w=>{word=w}, getWord:()=>word};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
   {getItem:k=>store[k]??null, setItem:(k,v)=>{store[k]=v}, removeItem:k=>{delete store[k]}},
   fn=>fn(), function(){}, {createObjectURL:()=>'', revokeObjectURL(){}});
@@ -67,6 +68,19 @@ t('acende só o que está ativo',
 t('deixa apagado o que não está',
   ['LT','RB','L3','B'].every(k=>!new RegExp(`on[^>]*>${k}<`).test(h)) ? 'LT RB L3 B apagados':'ACESO INDEVIDO',
   ['apagados']);
+
+console.log('\n— acento é um CICLO, e sempre volta —');
+const ciclo = (palavra, n, dir=1) => { M.setWord(palavra);
+  for(let i=0;i<n;i++) M.cycleAccent(dir); return M.getWord(); };
+t('café: 1 toque',        ciclo('cafe',1),  ['café']);
+t('   2 toques → ê',      ciclo('cafe',2),  ['cafê']);
+t('   3 toques (e só tem 3) volta ao e', ciclo('cafe',3), ['cafe']);
+t('a tem 5 estados, e fecha', ciclo('la',5), ['la']);
+t('← desfaz o →',         (()=>{M.setWord('cafe');M.cycleAccent(1);M.cycleAccent(-1);return M.getWord();})(), ['cafe']);
+t('NÃO pula pra vogal anterior', ciclo('cafe',2), ['cafê']);
+console.log('  ↑ era o bug: 2 toques acentuavam o "a" em vez de reverter o "e"');
+t('só: o tem 4 estados',  ciclo('so',1),    ['só']);
+t('s↔z continua',         (()=>{M.setWord('faser');M.toggleSibilant();return M.getWord();})(), ['fazer']);
 
 console.log('\n— telemetria —');
 const tipos = () => M.tele.eventos.map(e=>e.tipo).join(',');
