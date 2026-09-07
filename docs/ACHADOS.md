@@ -533,6 +533,57 @@ conjunto de dedos — a menos que apareça um quinto, e aí a saída é de hardw
 
 ---
 
+## 10. Quarta sessão (07/09, 21h35) — D aprovada, 99 sílabas sem trocar
+
+Log em [`sessao-2026-09-07d.json`](sessao-2026-09-07d.json). Frase escrita
+dentro do próprio protótipo, e é o melhor resumo do resultado:
+
+> *"oi claude esse é o teste de digitação com o modo d acabei de perceber que
+> falta vírgula e exclamação…"*
+
+| | |
+|---|---|
+| sílabas | **99, todas em D** |
+| trocas de variante | **0** |
+| conflitos / ambiguidades | **0 / 0** |
+| sílabas corrigidas em <3s | 12% (era 14%) |
+| caracteres por sílaba | **2,15** — dentro da faixa prometida |
+| velocidade | 34 caracteres/min |
+
+### O bug que o log pegou, e que custou tempo real
+
+Onze toques seguidos no `s↔z` sobre "talves", **sem nenhum efeito**:
+
+```
+acento← [ê] → 'talvês'
+s↔z     → 'talvês'    ← nada
+s↔z     → 'talvês'    ← nada
+s↔z     → 'talvês'    ← nada
+```
+
+O `toggleSibilant` só enxergava sibilante **entre vogais**; em "talves" o `s` é
+final, o regex não casava e a tecla estava morta — **sem nenhum retorno**.
+Corrigido em duas frentes:
+
+- o alvo passa a incluir sibilante em fim de palavra, e o ciclo virou
+  `ss → s → z` entre vogais (`inclussi` → `inclusi` → `incluzi`), `s → z` no
+  fim (`talves` → `talvez`)
+- **toda tecla que não acha alvo agora avisa na tela.** Falha silenciosa foi o
+  que transformou um bug pequeno em onze tentativas.
+
+### Também dessa sessão
+
+Vírgula e exclamação ganharam endereço, no padrão que já existia com `A + RB`:
+**`X + RB`** = vírgula, **`Y + RB`** = exclamação.
+
+E ficou registrado o que o gate `—` do núcleo é: **redundante**. Analógico em
+repouso já produz "sem vogal", então `↑` no direito não faz nada de novo — é um
+slot pago e vazio, candidato natural para `k`, `w`, `y`, `h` (medidos no corpus:
+0,48%, 0,23%, 0,59% e 1,57%, mas quase tudo nome próprio estrangeiro, exceto o
+`h`, que é português de verdade — há, homem, hoje).
+
+---
+
 ## 9. O til é pós-correção, não default — e isso corrigiu um bug grande
 
 Ideia do Caio, a partir do caso `ãs`/`ans`:
@@ -576,8 +627,17 @@ em uso; se aparecer um terceiro caso lexical frequente, ele ganha o `↑`.
 
 ---
 
+**FECHADO 07/09:** o motor tem **um layout só, a D**. A, B e C viram registro
+histórico — este documento — e saíram do código. Cada uma tinha um jeito de
+tornar sílaba impossível, e todas pelo mesmo motivo, que é o achado central do
+projeto:
+
+> Um modificador que significa uma coisa no ataque e outra na coda mais cedo ou
+> mais tarde colide. O custo é proporcional à frequência do que foi
+> sobrecarregado — e por isso A (que sobrecarregava a líquida) doía menos que B
+> (que sobrecarregava sonoridade e nasalidade).
+
 **Em aberto:**
-1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
    provado como canal viável; a pergunta é se a líquida deve migrar para ele, e

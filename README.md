@@ -1,218 +1,233 @@
+<div align="center">
+
 # Sílabo
 
-Um **input method dirigido por controle de videogame** que digita **sílabas
-inteiras por gesto**, não caracteres.
+**Um teclado que digita sílabas inteiras, com as duas mãos num controle de videogame.**
 
-Duas rodas na tela. O analógico esquerdo escolhe o **ataque** (consoante
-inicial), o direito escolhe o **núcleo** (vogal), ao mesmo tempo. Um gatilho
-confirma a sílaba.
+Os dois analógicos se movem ao mesmo tempo: o esquerdo escolhe a consoante,
+o direito escolhe a vogal. Um gatilho fecha a sílaba.
+
+[**▶ Abrir o protótipo**](https://caioldcarvalho.github.io/silabo/) · [Briefing](docs/BRIEFING.md) · [Achados](docs/ACHADOS.md)
+
+</div>
+
+---
+
+<div align="center">
+
+[![Sílabo em uso](docs/demo.gif)](docs/demo.mp4)
+
+<sub>*Digitando ao vivo. [Vídeo completo com áudio](docs/demo.mp4) (1min).*</sub>
+
+</div>
+
+---
+
+## A ideia
+
+Um controle tem **dois polegares que se movem em paralelo**. Um teclado obriga
+os dedos a irem um de cada vez. Se cada polegar carregar metade da sílaba, os
+dois chegam juntos:
 
 ```
-abacate  → 4 gestos, 7 caracteres
-programa → 3 gestos, 8 caracteres
-cantar   → 2 gestos, 6 caracteres
+       analógico esquerdo            analógico direito
+            ataque                        núcleo
+              ↓                             ↓
+              c            +                a          =    "ca"
+                          ↑
+                     um gesto só
 ```
 
-Média entre 1.8 e 2.5 caracteres por gesto — **sem dicionário e sem predição**.
-O ganho é estrutural, não vem de heurística.
-
-Inspiração declarada: [8vim](https://8vim.com/) (herdeiro do 8pen), onde a letra
-não é uma posição e sim um caminho. As propriedades que queremos preservar:
-gesto contínuo, uso eyes-free depois de treinado, memória muscular de movimento
-em vez de posição.
-
-> Experimento e curiosidade — sem pretensão de substituir teclado. Mas decisões
-> que fechem portas de internacionalização ou acessibilidade são evitadas de
-> propósito.
-
-## Rodar o protótipo
-
-Arquivo único, sem dependências, sem build:
-
-```fish
-xdg-open index.html          # ou abra no navegador na mão
+```
+programa   →  3 gestos, 8 caracteres
+abacate    →  4 gestos, 7 caracteres
+cantar     →  2 gestos, 6 caracteres
 ```
 
-Plugue um controle (Xbox / genérico) e aperte um botão para a Gamepad API
-enxergá-lo. Sem controle, dá para testar pelo teclado:
+**Entre 1,8 e 2,5 caracteres por gesto — sem dicionário e sem predição.**
+Medido em sessão real: **2,15**. O ganho é estrutural, não vem de heurística:
+`B` + `a` é sempre "ba", por regra.
 
-| Teclas | Função |
+> Inspirado no [8vim](https://8vim.com/), onde a letra não é uma posição e sim
+> um caminho. O que se quis preservar: gesto contínuo, uso *eyes-free* depois de
+> treinado, e memória muscular de **movimento** em vez de posição.
+
+---
+
+## Rodar
+
+Arquivo único, sem dependências, sem build. Abra
+**[caioldcarvalho.github.io/silabo](https://caioldcarvalho.github.io/silabo/)**
+ou o `index.html` local, plugue um controle e aperte um botão para o navegador
+enxergá-lo.
+
+Sem controle, dá para testar no teclado:
+
+| teclas | função |
 |---|---|
-| `W A S D` + `Q E Z C` | analógico esquerdo (ataque) |
-| `I J K L` + `U O M .` | analógico direito (núcleo) |
+| `W A S D` + `Q E Z C` | analógico esquerdo — **ataque** |
+| `I J K L` + `U O M .` | analógico direito — **núcleo** |
 | `Espaço` | confirma a sílaba (RT) |
-| `1` `2` `3` | LB, LT, RB |
-| `4` `5` | L3, R3 |
-| `Enter` | fecha a palavra |
-| `Backspace` | apaga |
-| `Shift+.` / `Shift+/` | ponto final / interrogação |
-| setas `→` / `←` | cicla o acento da última vogal |
-| seta `↓` | alterna s ↔ z |
+| `1` `2` `3` `4` `5` | LB, LT, RB, L3, R3 |
+| `Enter` · `Backspace` | fecha a palavra · apaga |
+| `←` `→` · `↓` | cicla acento · cicla sibilante |
 
-No controle, fora da sílaba (analógicos em repouso): **A** = espaço, **A+RB** =
-enter, **B** = backspace (segurar apaga a palavra), **X** = ponto final,
-**Y** = interrogação.
+---
 
 ## O layout
 
-**Ataque** (analógico esquerdo) — cardinais carregam as consoantes mais
-frequentes do português; o modificador de sonoridade dá o par sonoro:
+### Ataque — analógico esquerdo
+
+As consoantes mais frequentes do português nas quatro cardinais; **L3**
+sonoriza, dando o par:
 
 | | ↑ | → | ↓ | ← | ↗ | ↘ | ↙ | ↖ |
 |---|---|---|---|---|---|---|---|---|
-| base | t | s | m | l | c | p | f | x |
-| sonoro | d | z | n | r | g | b | v | j |
+| **base** | t | s | m | l | c | p | f | x |
+| **+ L3** | d | z | n | r | g | b | v | j |
 
-Analógico em repouso = ataque zero (sílaba iniciada por vogal). Líquidas
-compõem clusters (`p+r` = "pr"); onde o cluster é ilegal em português o slot é
-reaproveitado: `n+r` → **nh**, `l+r` → **lh**, `r+r` → **rr**.
+Analógico em repouso = **ataque zero** (sílaba que começa com vogal).
 
-**Núcleo** (analógico direito) — arranjo segue o trapézio vocálico do IPA
-(frente à esquerda, fundo à direita, altura em cima), mas o rótulo na tela é só
-ortografia comum:
+**Deslizar compõe.** Rolar o analógico até `→` acrescenta um **r**, até `←`
+acrescenta um **l** — `p`→`→` dá "pr", `c`→`←` dá "cl". Onde o cluster é
+proibido em português, o slot está vago e foi reaproveitado:
 
 ```
-      —          ↑  sem vogal (consoante solta, sigla)
-   i     u
-   e     o       roll entre gates = ditongo:  a→i = "ai",  o→u = "ou"
-   é     ó
-      a
+n → →  =  nh          l → →  =  lh          r → →  =  rr
 ```
 
-**Re-grafia: role o ataque até ↗.** O português não é fonêmico o bastante para
-a grafia ser função do fonema — "sela"/"cela" e "sinto"/"cinto" são homófonos,
-nenhuma regra decide. Então a escolha volta para o usuário, com **um fato motor
-só**: *o som do gate em que você começou, escrito com a letra que mora em ↗.*
+### Núcleo — analógico direito
+
+O arranjo segue o trapézio vocálico do IPA — frente à esquerda, fundo à direita,
+altura em cima — mas a tela mostra só letras que qualquer alfabetizado
+reconhece:
+
+```
+        —              ↑  sem vogal (consoante solta, sigla)
+     i     u
+     e     o           roll = ditongo:   a→i = "ai"   ·   o→u = "ou"
+     é     ó
+        a              R3 nasaliza:      a→ã   ·   o→õ
+```
+
+O roll lê **o gate de origem, o de destino e as inversões de sentido** — os
+gates apenas atravessados no caminho são viagem, não intenção. É evento
+discreto, sem cronômetro.
+
+### Coda
+
+`RB` = **-s** (plural) · `RB`+`LB` = **-r** (todos os infinitivos) · `RB`+`LT` = **-l**
+
+---
+
+## A grafia
+
+O português não é fonêmico o bastante para a escrita ser função do som: *sela* e
+*cela*, *sinto* e *cinto* são homófonos. Onde nenhuma regra decide, a escolha
+volta para quem digita — com **um fato motor só**:
+
+> *O som do gate em que você começou, escrito com a letra que mora em ↗.*
 
 | gesto | sai | |
 |---|---|---|
-| `s`(→) roll ↗ | **c** / **ç** | cebola, cidade · ação, moço |
-| `x`(↖) roll ↗ | **ch** | chave, chão — ch começa com o c de ↗ |
-| `j` roll ↗ | **g** | gente, girafa — ↗ sonorizado *é* g |
+| `s` roll ↗ | **c** / **ç** | cebola, cidade · ação, moço |
+| `x` roll ↗ | **ch** | chave, chão |
+| `j` roll ↗ | **g** | gente, girafa |
 
 Não é uma tabela de pares: os três terminam no mesmo gate. E `s`, `x`, `j` são
-exatamente os ataques que **não admitem líquida** em português, então a re-grafia
-nunca colide com cluster. Roll para qualquer outro destino é ignorado — desleixo
-degrada para o gate simples, não vira erro.
+exatamente as consoantes que **não aceitam líquida** em português — então o slot
+de roll delas estava livre, e a re-grafia nunca colide com um cluster.
 
-`c` vs `ç` **não é um segundo endereço**: ⟨ç⟩ nunca ocorre antes de e/i, então a
-vogal decide. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
+O resto o motor deduz sozinho, sobre **o buffer da palavra inteira**: `c`→`qu`
+antes de e/i, `s`→`ss` entre vogais, o `n` nasal virando `m` antes de p/b,
+`ãu`→`ão`, `ãe`, `õe`.
 
-**D-pad — pós-correção** sobre o que já está escrito. O acento **cicla** na
-última vogal em vez de ser aplicado: `→` avança, `←` volta, e cada vogal só
-oferece os acentos que ela aceita.
+**D-pad — o que é lexical e nenhuma regra resolve:**
 
-```
-a → á → â → ã → à → a        e → é → ê → e        o → ó → ô → õ → o
-```
+| | |
+|---|---|
+| `→` / `←` | cicla o acento da última vogal · `a á â ã à` · `e é ê` · `o ó ô õ` |
+| `↓` | cicla a sibilante · `ss → s → z` |
 
-Sempre reversível e sempre volta à vogal nua — com três botões de disparo único
-não havia como desfazer: apertar de novo caminhava para a vogal *anterior* e
-acentuava aquela. `↓` alterna `s`↔`z` na última sibilante intervocálica
-(faser → fazer). `↑` está livre.
+O ciclo é reversível por construção e sempre volta ao começo.
 
-`é` e `ó` têm gate próprio e saem acentuados como o rótulo promete — o d-pad
-cobre o resto, **inclusive o til**: `/aN/` em fim de palavra grafa `am` por
-default (falam, foram, eram — 0,671% dos tokens contra 0,119% de `-ã`), e quem
-quer `irmã` cicla o acento a partir de `irmam`. Medido: **10,7% dos tokens** carregam vogal acentuada, caro
-demais para ser tudo pós-correção.
+---
 
-**Telemetria.** A sessão é registrada: cada sílaba com o gesto que a produziu, as
-palavras fechadas, os apagamentos (o sinal honesto de que algo não saiu certo) e
-os **conflitos, que o motor detecta sozinho** — quando um modificador é
-apertado mas seu efeito é descartado, como a líquida que some porque RB está
-segurado. O contador fica no painel de medição e o log baixa em JSON. Sobrevive
-a recarga; nada sai da máquina.
+## Por que segmentar não tem como errar
 
-**Coda** — `RB` = -s (plural) · `RB+LB` = -r (infinitivos) · `RB+LT` = -l.
-`LB` significa "r" e `LT` significa "l" em qualquer posição: uma regra, dois
-lugares.
+`ca.mpo` e `cam.po` produzem **"campo"** — as duas. Não existe divisão errada,
+porque o ortografador trabalha sobre a palavra, não sobre a sílaba. Consequência
+prática: **não há estado de erro**. Ninguém trava tentando lembrar onde a
+palavra se separa, e nomes próprios e estrangeirismos saem em pedaços
+arbitrários sem problema nenhum.
 
-## As três variantes
+## Por que não existe "modo iniciante"
 
-- **A** — L3 sonoriza, R3 nasaliza, LB/LT dão a líquida. Cobre bem, mas usa os
-  cliques de analógico, e com RB segurado a líquida não tem para onde ir.
-- **B** — roll dá a líquida, LB sonoriza, LT nasaliza. Mata L3/R3, mas LB e LT
-  também qualificam a coda, então "tar", "das" e **todos os infinitivos** são
-  impossíveis.
-- **C** — roll dá a líquida e, com RB, ela vira coda. Reprovada em teste: o roll
-  não pode terminar no gate em que começou, então coda `-r` com ataque `s`/`z`
-  ("ser", "fazer", "dizer") é **impossível**, e para ataques distantes custa meia
-  volta de polegar.
-- **D** — a líquida mora **só** no roll; `L3`/`R3` fazem sonoro e nasal; `RB` com
-  `LB`/`LT` faz a coda. **Nenhum canal é compartilhado, e por isso alcança as 280
-  formas** — inclusive `pres`, `nhos`, `grande`, que nenhuma outra alcança. Paga
-  com L3/R3.
+O commit é por gatilho — **sem timeout, sem cronômetro**. O gesto do novato e o
+do experiente são **o mesmo gesto**, só comprimido no tempo:
 
-O trade-off é aritmético: durante a sílaba sobram quatro canais (roll esquerdo,
-LB, LT, RB) para cinco funções (líquida, sonoro, nasal, coda, tipo da coda).
-**Sem L3/R3 a conta não fecha** — B e C só escolhem onde pagar a diferença.
+- **iniciante** — empurra, lê o overlay, empurra o outro, confirma *(~2s)*
+- **experiente** — os dois polegares saem juntos, o overlay nem renderiza *(~150ms)*
 
-## A pergunta em aberto
+Não há nada a desaprender depois. É onde quase todo método alternativo morre.
 
-**Como o ataque compõe com a líquida?** As duas variantes estão implementadas
-lado a lado, com botão de troca, justamente para decidir isso por medição:
+---
 
-- **A — modificador dedicado.** L3 sonoriza, LB = +r, LT = +l, R3 nasaliza.
-  Mais rápido no caso frequente, mas usa L3/R3 (que o autor detesta) e dá
-  função dupla ao LB.
-- **B — roll no ataque.** O segundo gate do analógico esquerdo lê a líquida
-  (`←` = +l, `→` = +r), LB sonoriza, LT nasaliza. Os dois analógicos passam a
-  seguir **uma única regra** ("deslizar compõe") e L3/R3 somem do desenho —
-  ao custo de `←` significar "l" na primeira posição e "+l" na segunda.
+## O que a interface mostra
 
-O painel de medição no protótipo conta gestos, caracteres, caracteres/gesto e
-ms/caractere. O que interessa medir: taxa de erro **por posição de slot** (revela
-diagonal mal alocada) e o tempo de palavras com cluster dos dois lados
-("programa", "brincar").
+**O desenho do controle** acende em vermelho o que está pressionado, com os
+analógicos defletindo de verdade e oito pontos ao redor de cada base marcando os
+gates visitados — o de origem em branco, os do roll em vermelho.
+
+**Os satélites** aparecem em volta da casa em que o analógico está, dizendo o
+que cada modificador faria **e qual gatilho o produz**. Clusters que o português
+não admite não são oferecidos.
+
+**A telemetria** registra a sessão: cada sílaba com o gesto que a produziu, as
+palavras, os apagamentos, e os conflitos — que o motor detecta sozinho, quando
+um modificador é apertado e seu efeito descartado. Baixa em JSON pelo painel de
+medição, sobrevive a recarga, e **nada sai da máquina**.
+
+---
 
 ## Estado
 
-Protótipo funcional de navegador (`index.html`): as duas variantes, detecção de
-gate com histerese (entra em 0.55, sai em 0.38), roll com reset ao centro, rodas
-em SVG, ortografador operando **sobre o buffer da palavra** (é o que permite
-`ca.mpo` e `cam.po` produzirem "campo") e painel de medição.
+Protótipo de navegador funcional. Um layout só, o que sobrou de
+[quatro que foram testados](docs/ACHADOS.md) — os três anteriores tinham, cada
+um, um jeito de tornar sílabas **impossíveis de digitar**, e todos pelo mesmo
+motivo:
 
-A interface mostra, ao redor da casa em que o analógico está, **o que cada
-modificador faria e qual gatilho o produz** — e o gatilho muda entre as
-variantes (na A a líquida é botão, na B é movimento), que é justamente a parte
-confusa de aprender. Clusters que o português não admite não são oferecidos.
+> Um modificador que significa uma coisa no ataque e outra na coda mais cedo ou
+> mais tarde colide. A saída foi dar à líquida um endereço que só é dela — o
+> roll — e deixar `LB`/`LT` livres para a coda. **Nada é compartilhado, então
+> nada colide:** as 280 formas de sílaba que o desenho promete são alcançáveis.
 
-No topo há um **desenho do controle** que acende em vermelho o que está sendo
-pressionado, com os analógicos defletindo de verdade e oito pontos ao redor de
-cada base marcando os gates **visitados** — o de origem em branco, os do roll em
-vermelho, porque um roll é uma sequência e uma posição só não a mostra. Serve à
-gravação de tela: quem assiste vê o polegar e os botões no mesmo quadro que o
-texto que saiu.
+Medido em sessão real: **0 conflitos**, 12% de sílabas corrigidas, 2,15
+caracteres por gesto.
 
-O controle e o texto ficam **lado a lado**, meia coluna cada, para caberem na
-mesma tela sem zoom out — com as rodas logo abaixo, tudo o que importa durante a
-digitação termina dentro dos primeiros 660px.
+**Lacunas conhecidas**, deliberadamente explícitas em vez de meio-resolvidas:
 
-Para conferir sem abrir o navegador:
+- `x` vs `ch` ainda é decisão não tomada
+- tritongo (`Uruguai`, `quais`) provavelmente pede labialização no ataque, não
+  tritongo no núcleo
+- `k`, `w`, `y` e `h` não têm endereço — o gate `—` do núcleo é redundante com o
+  repouso e é o candidato natural
+- plural de `-ão` é lexical (pães/mãos/ações), então vai sílaba a sílaba
 
-```fish
-node tools/pad-preview.mjs        # o desenho do controle em PNG (rsvg-convert)
-node tools/screenshot.mjs --uso   # a página inteira, com uma sessão simulada
-node tools/screenshot.mjs --medir # as caixas e a altura da página
-```
+## Testes e ferramentas
 
-Duas suítes de regressão, sem dependências:
+Sem dependências. Só `node`.
 
 ```fish
-node test/motor.test.mjs   # 50 casos — sílaba e ortografia
-node test/ui.test.mjs      # 14 casos — o que os satélites e o HUD geram
+node test/motor.test.mjs      # 72 casos — montagem da sílaba e ortografia
+node test/ui.test.mjs         # 45 casos — o que os satélites, o HUD e o log geram
+node tools/corpus.mjs         # mede grafias contra corpus real de pt-BR
+node tools/screenshot.mjs     # a página em PNG (--uso, --medir)
+node tools/pad-preview.mjs    # o desenho do controle em PNG
 ```
 
-Lacunas conhecidas, deliberadamente explícitas em vez de meio-resolvidas:
-
-- `ê`/`ô`/`â` e os acentos agudos sem entrada (vão no d-pad, como pós-correção)
-- `x` vs `ch` é decisão não tomada
-- tritongo (`Uruguai`, `quais`) — provavelmente pede labialização no ataque,
-  não tritongo no núcleo
-- plural de `-ão` é lexical (pães/mãos/ações), então é digitado sílaba a sílaba
-
-Nenhuma delas impede medir o que importa agora.
+O `tools/corpus.mjs` é o que decidiu várias escolhas por medição em vez de
+intuição — inclusive derrubar duas decisões minhas que pareciam certas.
 
 ## Para onde vai
 
@@ -221,21 +236,19 @@ Trocar de língua deve significar trocar só o segundo.
 
 ```
 src/
-  phonology.js       montagem da sílaba a partir dos gates (puro, testável, sem UI)
-  orthography-pt.js  grafia do português sobre o buffer da palavra
-  wheel.js           overlay SVG
-  input.js           gamepad, gates, histerese, roll
-  metrics.js         instrumentação
+  phonology.js       monta a sílaba a partir dos gates (puro, testável, sem UI)
+  orthography-pt.js  a grafia do português sobre o buffer da palavra
+  wheel.js  ·  input.js  ·  metrics.js
 ```
 
-Depois, nativo: Windows (XInput/SDL2, overlay `WS_EX_LAYERED | WS_EX_TRANSPARENT`,
-injeção via `SendInput`) e Linux (evdev para ler, **uinput** para injetar; o
-overlay é a parte dolorida — X11 é fácil, Wayland exige `layer-shell`).
-Cross-platform num código só seria Rust com `gilrs` + `egui`/`winit`.
+Depois, nativo: **Windows** (XInput/SDL2, overlay `WS_EX_LAYERED`, injeção via
+`SendInput`) e **Linux** (evdev para ler, **uinput** para injetar — o overlay é
+a parte dolorida, X11 é fácil e Wayland exige `layer-shell`). Num código só,
+seria Rust com `gilrs` + `egui`.
 
-O contexto completo — inclusive as alternativas **avaliadas e descartadas**, com
-o motivo de cada uma, para não serem re-propostas — está em
-[`docs/BRIEFING.md`](docs/BRIEFING.md).
+> Este é um experimento, sem pretensão de substituir teclado. Mas decisões que
+> fechem portas de internacionalização ou de acessibilidade são evitadas de
+> propósito.
 
 ## Licença
 

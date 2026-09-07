@@ -36,15 +36,6 @@ header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:2
 #status{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
 #status.on{color:var(--right)}
 
-.variants{display:flex;gap:8px;margin-left:auto}
-.variants button{
-  font-family:inherit;font-size:13px;font-weight:500;
-  background:transparent;color:var(--muted);
-  border:1px solid var(--line);border-radius:2px;
-  padding:6px 14px;cursor:pointer;transition:none;
-}
-.variants button.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.variants button:focus-visible{outline:2px solid var(--right);outline-offset:2px}
 
 /* Controle e texto lado a lado: eram duas faixas de largura total empilhadas,
    e não cabiam na tela sem zoom out. */
@@ -121,12 +112,6 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
 <header>
   <h1>Sílabo <span>protótipo 0.1</span></h1>
   <div id="status">nenhum controle detectado — aperte um botão</div>
-  <div class="variants">
-    <button id="vA" class="sel">A · modificador</button>
-    <button id="vB">B · roll</button>
-    <button id="vC">C · mista</button>
-    <button id="vD">D · sem conflito</button>
-  </div>
 </header>
 
 <div class="topo">
@@ -157,7 +142,7 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
 
 <div class="grid">
   <div class="card">
-    <h3>Botões nesta variante</h3>
+    <h3>Atalhos</h3>
     <table id="binds"></table>
   </div>
   <div class="card">
@@ -225,7 +210,6 @@ const RESPELL = {
 };
 
 // ---------------------------------------------------------------- state
-let variant = 'A';
 let pad = null;
 
 const stick = {
@@ -281,7 +265,7 @@ function track(side,x,y){
 
 // ---------------------------------------------------------------- assembly
 // The liquid the left roll is asking for, if any. ← is l, → is r — same axis
-// in every variant that reads the roll at all.
+// ← is l, → is r.
 function rollLiquid(){
   const mk = landmarks(stick.L.gates);
   if(mk.length<2) return '';
@@ -294,8 +278,7 @@ function buildOnset(){
   if(!gs.length) return {c:'',respell:false};
   const mk = landmarks(gs);
   let base = ONSET_BY_GATE[mk[0]];
-  const voiced = (variant==='A'||variant==='D') ? btn.L3 : btn.LB;
-  if(voiced) base = VOICED[base];
+  if(btn.L3) base = VOICED[base];
 
   // Rolling the onset to ↗ asks for the other spelling. The consonants that
   // need one (s, x, j) are exactly the ones that take no liquid in Portuguese,
@@ -304,25 +287,13 @@ function buildOnset(){
   const respell = mk.length>1 && mk[mk.length-1]===RESPELL_GATE
                   && mk[0]!==RESPELL_GATE && !!RESPELL[base];
 
+  // The liquid lives on the roll and NOWHERE else, so LB/LT are free to qualify
+  // the coda and nothing is ever shared. That is the whole design: a modifier
+  // that means one thing in the onset and another in the coda eventually
+  // collides, no matter how the collision is arranged. Three earlier layouts
+  // are in docs/ACHADOS.md, with what each one made impossible.
   let liq = '', suprimido = null;
-  // D: the liquid lives on the roll and NOWHERE else, so LB/LT are free to
-  // qualify the coda and nothing is ever shared. That is the whole point —
-  // a modifier that means one thing in the onset and another in the coda
-  // eventually collides, no matter how the collision is arranged.
-  if(variant==='D'){
-    if(!respell) liq = rollLiquid();
-  } else if(variant==='A'){
-    // with RB held, LB/LT mean coda type — the liquid has nowhere to go
-    // NOTE: this is ambiguity, not loss. RB+LB is also the normal gesture for
-    // coda -r, so flagging it as a conflict cried wolf on every infinitive —
-    // the first real log had 2 "conflicts" and both were correct typing.
-    if(btn.RB && (btn.LB||btn.LT)) suprimido = 'ambiguo:liquida-ou-coda';
-    else if(btn.LB) liq='r'; else if(btn.LT) liq='l';
-  } else if(!respell){
-    // B and C both read the liquid off the roll. In C, holding RB sends it to
-    // the CODA instead of the onset — one rule, two places, no extra finger.
-    if(!(variant==='C' && btn.RB)) liq = rollLiquid();
-  }
+  if(!respell) liq = rollLiquid();
   if(!liq) return {c:base,respell,suprimido};
   const pair = base+liq;
   if(DIGRAPH[pair])       return {c:DIGRAPH[pair], respell:false, suprimido};
@@ -352,20 +323,13 @@ function buildNucleus(){
     const n = NUCLEUS_BY_GATE[gs[i]];
     if(n && n!=='—') v += GLIDE[n];
   }
-  const nasal = (variant==='A'||variant==='D') ? !!btn.R3 : !!btn.LT;
+  const nasal = !!btn.R3;
   return {v,nasal};
 }
 
 function buildCoda(){
   if(!btn.RB) return '';
-  if(variant==='D') return btn.LB ? 'r' : btn.LT ? 'l' : 's';
-  // C: the roll composes the liquid, and RB says it lands on the coda. LB and
-  // LT stay dedicated to voicing and nasality, which is what B threw away and
-  // what made "tar", "das" and every infinitive impossible there.
-  if(variant==='C') return rollLiquid() || 's';
-  if(btn.LB) return 'r';
-  if(btn.LT) return 'l';
-  return 's';
+  return btn.LB ? 'r' : btn.LT ? 'l' : 's';
 }
 
 function current(){
@@ -449,7 +413,7 @@ function finish(w){
 function commit(){
   const syl = current();
   if(!syl.onset && !syl.vowel && !syl.coda){
-    tlog('vazio', {gesto:gesto(), variante:variant});   // pressed commit, got nothing
+    tlog('vazio', {gesto:gesto()});   // pressed commit, got nothing
     return;
   }
   const before = word;
@@ -458,14 +422,14 @@ function commit(){
   if(gained>0){ m.c += gained; }
   m.g++;
   if(!m.t0) m.t0 = performance.now();
-  tlog('silaba', {gesto:gesto(), variante:variant,
+  tlog('silaba', {gesto:gesto(),
     partes:{ataque:syl.onset||'', nucleo:syl.vowel||'', nasal:!!syl.nasal,
             coda:syl.coda||'', regrafia:!!syl.respell},
     saiu: finish(word).slice(finish(before).length), palavra: finish(word)});
   if(syl.suprimido){
     // Only a silent LOSS is a conflict. Ambiguity is logged, not alarmed.
     const perda = !syl.suprimido.startsWith('ambiguo:');
-    tlog(perda ? 'CONFLITO' : 'ambiguo', {gesto:gesto(), variante:variant,
+    tlog(perda ? 'CONFLITO' : 'ambiguo', {gesto:gesto(),
       motivo:syl.suprimido, saiu:finish(word).slice(finish(before).length)});
   }
   render();
@@ -552,18 +516,16 @@ function drawWheel(el, map, accent, side){
   el.innerHTML = s;
 }
 
-// What the modifiers would turn the live gate into, drawn around its own house.
-// Shows the TRIGGER next to the result, because the trigger differs between
-// variants (in A the liquid is a button, in B it is a roll) and that is exactly
-// what is confusing to learn.
+// What the modifiers would turn the live gate into, drawn around its own house,
+// with the TRIGGER next to the result — the liquid comes from a roll and the
+// voicing from a button, and which is which is the confusing part to learn.
 const satCache = {l:'',r:''};
 
 function satellites(side){
   const S = stick[side==='l'?'L':'R'];
   const g = S.gates.length ? S.gates[0] : null;
-  const voiced = (variant==='A'||variant==='D') ? btn.L3 : btn.LB;
-  const nasal  = variant==='A' ? btn.R3 : btn.LT;
-  const chave = [side,g,variant,voiced,nasal,btn.LB,btn.LT,btn.RB].join(',');
+  const voiced = btn.L3, nasal = btn.R3;
+  const chave = [side,g,voiced,nasal,btn.LB,btn.LT,btn.RB].join(',');
   if(chave===satCache[side]) return;
   satCache[side] = chave;
 
@@ -579,16 +541,16 @@ function satellites(side){
     const base = ONSET_BY_GATE[g];
     const b = voiced ? VOICED[base] : base;
     const liga = (p) => DIGRAPH[p] || p;
-    itens.push([0,-32, variant==='A'?'L3':'LB', VOICED[base], !!voiced]);
+    itens.push([0,-32, 'L3', VOICED[base], !!voiced]);
     const vale = p => DIGRAPH[p] || (clusterOk(p[0],p[1]) ? p : null);
-    if(vale(b+'r')) itens.push([54,20,  variant==='A'?'LB':'roll →', liga(b+'r'), variant==='A' ? (!!btn.LB&&!btn.RB) : false]);
-    if(vale(b+'l')) itens.push([-54,20, variant==='A'?'LT':'roll ←', liga(b+'l'), variant==='A' ? (!!btn.LT&&!btn.RB) : false]);
+    if(vale(b+'r')) itens.push([54,20,  'roll →', liga(b+'r'), rollLiquid()==='r']);
+    if(vale(b+'l')) itens.push([-54,20, 'roll ←', liga(b+'l'), rollLiquid()==='l']);
     if(RESPELL[b]) itens.push([0,38,'roll ↗', RESPELL[b](true)+(b==='s'?' / '+RESPELL[b](false):''), false]);
   } else {
     const v = NUCLEUS_BY_GATE[g];
     if(v==='—'){ host.innerHTML=''; return; }
     const nas = v==='a' ? 'ã' : (v==='o'||v==='ó') ? 'õ' : v+'n';
-    itens.push([0,-32, variant==='A'?'R3':'LT', nas, !!nasal]);
+    itens.push([0,-32, 'R3', nas, !!nasal]);
     itens.push([-54,20,'roll ↖', v+'i', false]);
     itens.push([54,20, 'roll ↗', v+'u', false]);
   }
@@ -720,7 +682,8 @@ function render(){
   if(s.onset) bits.push('ataque '+s.onset);
   if(s.vowel) bits.push('núcleo '+s.vowel+(s.nasal?' nasal':''));
   if(s.coda) bits.push('coda -'+s.coda);
-  document.getElementById('parts').textContent = bits.join('   ·   ');
+  document.getElementById('parts').textContent =
+    (performance.now() < avisoAte) ? '⚠ ' + avisoTxt : bits.join('   ·   ');
 
   document.getElementById('out').innerHTML =
     escapeHtml(text+finish(word)) + '<i>&nbsp;</i>';
@@ -740,65 +703,7 @@ function render(){
 }
 function escapeHtml(t){return t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
-const BINDS = {
-  A:[['analógico esq.','ataque (8 direções)'],['L3','sonoriza  t→d  s→z  c→g'],
-     ['LB','+r   pr, gr, tr   ·   nr→nh'],['LT','+l   pl, cl, fl'],
-     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
-     ['R3','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
-     ['RT','confirma a sílaba'],
-     ['— grafia —',''],
-     ['roll do esq. até ↗','grafa com a letra de ↗'],
-     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
-     ['  j → ↗','g    gente, girafa'],
-     ['— d-pad (pós-correção) —',''],
-     ['→ / ←','cicla o acento da última vogal'],
-     ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
-     ['↓','s ↔ z   faser → fazer'],
-     ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],
-     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
-     ['LB + LT + B','limpa o texto todo'],
-     ['X','ponto final'],['Y','interrogação']],
-  B:[['analógico esq.','ataque (8 direções)'],['roll no esq. →','+r   pr, gr   ·   nr→nh'],
-     ['roll no esq. ←','+l   pl, cl, fl'],['LB','sonoriza  t→d  s→z  c→g'],
-     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
-     ['LT','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
-     ['RT','confirma a sílaba'],
-     ['— grafia —',''],
-     ['roll do esq. até ↗','grafa com a letra de ↗'],
-     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
-     ['  j → ↗','g    gente, girafa'],
-     ['— d-pad (pós-correção) —',''],
-     ['→ / ←','cicla o acento da última vogal'],
-     ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
-     ['↓','s ↔ z   faser → fazer'],
-     ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],
-     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
-     ['LB + LT + B','limpa o texto todo'],
-     ['X','ponto final'],['Y','interrogação']],
-  C:[['analógico esq.','ataque (8 direções)'],
-     ['roll do esq. →','+r   pr, gr   ·   nr→nh'],['roll do esq. ←','+l   pl, cl, fl'],
-     ['LB','sonoriza  t→d  s→z  c→g'],['LT','nasaliza  a→ã  o→õ'],
-     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
-     ['RB','coda -s'],
-     ['RB + roll do esq. →','coda -r   (todos os infinitivos)'],
-     ['RB + roll do esq. ←','coda -l'],
-     ['RT','confirma a sílaba'],
-     ['','sem L3 nem R3 em lugar nenhum'],
-     ['— grafia —',''],
-     ['roll do esq. até ↗','grafa com a letra de ↗'],
-     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
-     ['  j → ↗','g    gente, girafa'],
-     ['— d-pad (pós-correção) —',''],
-     ['→ / ←','cicla o acento da última vogal'],
-     ['↓','s ↔ z   faser → fazer'],
-     ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],
-     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
-     ['LB + LT + B','limpa o texto todo'],
-     ['X','ponto final'],['Y','interrogação']],
-  D:[['analógico esq.','ataque (8 direções)'],
+const BINDS = [['analógico esq.','ataque (8 direções)'],
      ['roll do esq. →','+r   pr, gr, tr   ·   nr→nh'],
      ['roll do esq. ←','+l   pl, cl, fl   ·   lr→lh'],
      ['L3','sonoriza  t→d  s→z  c→g'],['R3','nasaliza  a→ã  o→õ'],
@@ -814,16 +719,16 @@ const BINDS = {
      ['  j → ↗','g    gente, girafa'],
      ['— d-pad (pós-correção) —',''],
      ['→ / ←','cicla o acento da última vogal'],
-     ['↓','s ↔ z   faser → fazer'],
+     ['↓','cicla a sibilante: ss → s → z'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],
      ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
      ['LB + LT + B','limpa o texto todo'],
-     ['X','ponto final'],['Y','interrogação']]
-};
+     ['X','ponto final'],['X + RB','vírgula'],
+     ['Y','interrogação'],['Y + RB','exclamação']];
 function paintBinds(){
   document.getElementById('binds').innerHTML =
-    BINDS[variant].map(([k,v])=>`<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`).join('');
+    BINDS.map(([k,v])=>`<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`).join('');
 }
 
 // -------------------------------------------------- buttons outside a syllable
@@ -859,6 +764,11 @@ const BASE_DE = {};
 for(const [b,arr] of Object.entries(CICLO)) for(const ch of arr) BASE_DE[ch]=b;
 const dpadPrev = {up:0,down:0,left:0,right:0};
 
+// A key that does nothing has to say so. Eleven dead presses went unreported
+// because the failure was silent.
+let avisoAte = 0, avisoTxt = '';
+function avisa(t){ avisoTxt = t; avisoAte = performance.now() + 1600; }
+
 function editBuffer(fn){
   const emWord = word.length>0;
   const w = fn(emWord ? word : text);
@@ -884,23 +794,37 @@ function cycleAccent(dir){
   return virou;
 }
 
-// flips the last INTERVOCALIC single sibilant: casa ↔ caza, faser ↔ fazer.
-// Deliberately blind to "ss", which is a different phoneme, not a spelling.
+// Cycles the spelling of the last sibilant. Between vowels there are three
+// (ss = /s/, s = /z/, z = /z/); at the end of a word only two, because "ss"
+// does not occur there. The first version only looked BETWEEN vowels, so in
+// "talves" — where the s is final — the button was simply dead, and the log
+// caught eleven presses in a row with no effect and no feedback.
+const V_ACENTO = 'aeiouáéíóúâêôãõà';
 function toggleSibilant(){
+  let virou = null;
   editBuffer(w => {
-    const V='aeiouáéíóúâêôãõà';
-    const re = new RegExp(`[${V}]([sz])(?=[${V}])`,'gi');
+    const re = new RegExp(`[${V_ACENTO}](ss|s|z)(?=[${V_ACENTO}]|$)`,'gi');
     const hits = [...w.matchAll(re)];
     if(!hits.length) return null;
-    const i = hits[hits.length-1].index + 1;
-    return w.slice(0,i) + (w[i].toLowerCase()==='s'?'z':'s') + w.slice(i+1);
+    const h = hits[hits.length-1];
+    const i = h.index + 1, atual = h[1].toLowerCase();
+    const finalDePalavra = i + atual.length >= w.length;
+    const ciclo = finalDePalavra ? ['s','z'] : ['ss','s','z'];
+    const j = ciclo.indexOf(atual);
+    virou = ciclo[(j + 1) % ciclo.length];
+    return w.slice(0,i) + virou + w.slice(i + atual.length);
   });
+  return virou;
 }
 
 function dpad(now){
   if(!atRest()) { Object.assign(dpadPrev, now); return; }
-  if(now.right && !dpadPrev.right){ const v=cycleAccent(+1); tlog('dpad',{op:'acento→', vogal:v, virou:finish(word)||text.slice(-14)}); }
-  if(now.left  && !dpadPrev.left) { const v=cycleAccent(-1); tlog('dpad',{op:'acento←', vogal:v, virou:finish(word)||text.slice(-14)}); }
+  if(now.right && !dpadPrev.right){ const v=cycleAccent(+1);
+    tlog('dpad',{op:'acento→', vogal:v, achou:!!v, virou:finish(word)||text.slice(-14)});
+    if(!v) avisa('nenhuma vogal para acentuar'); }
+  if(now.left  && !dpadPrev.left) { const v=cycleAccent(-1);
+    tlog('dpad',{op:'acento←', vogal:v, achou:!!v, virou:finish(word)||text.slice(-14)});
+    if(!v) avisa('nenhuma vogal para acentuar'); }
   if(now.down  && !dpadPrev.down) { toggleSibilant();        tlog('dpad',{op:'s↔z',     virou:finish(word)||text.slice(-14)}); }
   Object.assign(dpadPrev, now);
 }
@@ -933,8 +857,8 @@ function faceButtons(pad){
   if(atRest()){
     // A = space · A+RB = enter
     if(now.A && !face.A) btn.RB ? endWord('\n') : endWord(' ');
-    if(now.X && !face.X) endWord('. ');
-    if(now.Y && !face.Y) endWord('? ');
+    if(now.X && !face.X) endWord(btn.RB ? ', ' : '. ');
+    if(now.Y && !face.Y) endWord(btn.RB ? '! ' : '? ');
     // B = backspace. LB+LT+B wipes everything — three fingers, so it does not
     // happen by accident, and the log had a 50-deletion burst clearing a
     // sentence one letter at a time.
@@ -1029,7 +953,8 @@ addEventListener('keydown',e=>{
     flash('B'); e.preventDefault(); }
   if(e.code==='ArrowRight'){ cycleAccent(+1); flash('right'); e.preventDefault(); }
   if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
-  if(e.code==='ArrowDown'){  toggleSibilant(); flash('down');  e.preventDefault(); }
+  if(e.code==='ArrowDown'){  if(!toggleSibilant()) avisa('nenhuma sibilante para alternar');
+                             flash('down');  e.preventDefault(); }
   if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; flash('X'); }
   if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; flash('Y'); }
 });
@@ -1040,24 +965,6 @@ addEventListener('keyup',e=>{
 });
 
 // ---------------------------------------------------------------- boot
-document.getElementById('vA').onclick=()=>setVariant('A');
-document.getElementById('vB').onclick=()=>setVariant('B');
-document.getElementById('vC').onclick=()=>setVariant('C');
-document.getElementById('vD').onclick=()=>setVariant('D');
-function setVariant(v){
-  const antes = variant;      // ler ANTES de trocar: o log saía sempre "C → C"
-  variant=v;
-  for(const k of ['A','B','C','D'])
-    document.getElementById('v'+k).classList.toggle('sel',v===k);
-  // What was happening right before a switch is the real evidence of what the
-  // variant could not do — the first log showed every switch was escaping
-  // either L3 or a broken coda.
-  const recentes = tele.eventos.slice(-8)
-    .filter(e=>['silaba','apaga','ambiguo','CONFLITO'].includes(e.tipo))
-    .map(e=>e.tipo==='silaba' ? `${e.gesto}→${e.saiu}` : `${e.tipo}:${e.motivo||e.alvo||''}`);
-  tlog('variante', {de:antes, para:v, antesDisso:recentes});
-  paintBinds(); resetMetrics();
-}
 document.getElementById('rs').onclick=resetMetrics;
 document.getElementById('wipe').onclick=()=>{
   tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; render(); };

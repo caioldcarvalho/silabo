@@ -11,16 +11,16 @@ const js   = html.split('<script>')[1].split('</script>')[0];
 const puro = js.split('// ---------------------------------------------------------------- wheels')[0];
 const M = new Function('performance','document', puro +
   `return {orthograph, finish, landmarks, NUCLEUS_BY_GATE, GLIDE,
-           buildOnset, buildCoda, stick, btn, setVar: v => { variant = v; }};`
+           buildOnset, buildCoda, stick, btn};`
 )({now:()=>0},{getElementById:()=>({})});
 
 const S = (o,v,n=false,c='',respell=false) => ({onset:o, vowel:v, nasal:n, coda:c, respell});
 // R(...) = a syllable whose onset came from an actual left-stick roll
 const R = (gates,v,{voiced=false,n=false,c=''}={}) => {
-  M.setVar('A'); M.stick.L.gates = gates;
-  Object.assign(M.btn,{LB:0,LT:0,RB:0,L3:voiced?1:0,R3:0});
+  M.stick.L.gates = gates;
+  Object.assign(M.btn,{LB:c==='r'?1:0, LT:c==='l'?1:0, RB:c?1:0, L3:voiced?1:0, R3:n?1:0});
   const o = M.buildOnset();
-  return {onset:o.c, respell:o.respell, vowel:v, nasal:n, coda:c};
+  return {onset:o.c, respell:o.respell, vowel:v, nasal:n, coda:M.buildCoda()};
 };
 const P = (...sils) => { let w=''; for(const s of sils) w = M.orthograph(w,s); return M.finish(w); };
 const N = gs => { const mk=M.landmarks(gs); let v=M.NUCLEUS_BY_GATE[mk[0]];
@@ -91,18 +91,21 @@ t('faser → d-pad ↓ → fazer', (()=>{ let w=''; for(const x of [S('f','a'),S
    const i=hits[hits.length-1].index+1; return M.finish(w.slice(0,i)+'z'+w.slice(i+1)); })(), 'fazer');
 
 grupo('cluster fonotaticamente ilegal não vira lixo');
-const LIQ = (gates,liq,v,{c=''}={}) => { M.setVar('A'); M.stick.L.gates=gates;
-  Object.assign(M.btn,{LB:liq==='r'?1:0, LT:liq==='l'?1:0, RB:0, L3:0, R3:0});
-  const o=M.buildOnset(); return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:c}; };
-t('s + LB  (sr não existe)', P(LIQ([2],'r','a')),  'sa');
-t('s + LT  (sl não existe)', P(LIQ([2],'l','a')),  'sa');
-t('x + LB  (xr não existe)', P(LIQ([7],'r','a')),  'xa');
-t('t + LB  (tr existe)',     P(LIQ([0],'r','a')),  'tra');
-t('p + LT  (pl existe)',     P(LIQ([3],'l','a')),  'pla');
+// a líquida vem do ROLL: → é r, ← é l. gates ↑0 ↗1 →2 ↘3 ↓4 ↙5 ←6 ↖7
+const LIQ = (gate,liq,v,{c=''}={}) => {
+  const destino = liq==='r' ? 2 : 6;
+  M.stick.L.gates = gate===destino ? [gate] : [gate,destino];
+  Object.assign(M.btn,{LB:c==='r'?1:0, LT:c==='l'?1:0, RB:c?1:0, L3:0, R3:0});
+  const o=M.buildOnset();
+  return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:M.buildCoda()}; };
+t('s roll ← (sl não existe)', P(LIQ(2,'l','a')),  'sa');
+t('x roll → (xr não existe)', P(LIQ(7,'r','a')),  'xa');
+t('x roll ← (xl não existe)', P(LIQ(7,'l','a')),  'xa');
+t('t roll → (tr existe)',     P(LIQ(0,'r','a')),  'tra');
+t('p roll ← (pl existe)',     P(LIQ(3,'l','a')),  'pla');
 // /t/ não pode ser coda, então "atleta" só pode ser a·tle·ta: tl É ataque
-t('atleta [ +a][t+LT e][t+a]', P(S('','a'),LIQ([0],'l','e'),S('t','a')), 'atleta');
-t('atlas  [ +a][t+LT a coda-s]', P(S('','a'),LIQ([0],'l','a',{c:'s'})), 'atlas');
-t('atlas  [ +a][t+LT a][s sem vogal]', P(S('','a'),LIQ([0],'l','a'),S('s','')), 'atlas');
+t('atleta a · t roll← e · ta',  P(S('','a'),LIQ(0,'l','e'),S('t','a')), 'atleta');
+t('atlas  a · t roll← a coda-s', P(S('','a'),LIQ(0,'l','a',{c:'s'})),   'atlas');
 
 grupo('roll acidental degrada para o gate simples');
 t('só ↗ não re-grafa (c)',  P(R([1],'a')),        'ca');
@@ -117,32 +120,11 @@ t('caro',     P(S('c','a'),S('r','o')),               'caro');
 t('carro',    P(S('c','a'),S('rr','o')),              'carro');
 t('trabalho', P(S('tr','a'),S('b','a'),S('lh','o')),  'trabalho');
 
-grupo('variante C: as sílabas que o log mostrou o Caio perdendo');
-// C: LB sonoriza, LT nasaliza, roll = líquida; com RB a líquida vai pra CODA
-const C = (gates,v,{voiced=false,nasal=false,rb=false}={}) => {
-  M.setVar('C'); M.stick.L.gates = gates;
-  Object.assign(M.btn,{LB:voiced?1:0, LT:nasal?1:0, RB:rb?1:0, L3:0, R3:0});
-  const o = M.buildOnset();
-  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:M.buildCoda()};
-};
-// gates: ↑0=t ↗1=c →2=s ↘3=p ↓4=m ↙5=f ←6=l ↖7=x
-t('tar   t + coda-r  (can·TAR)', P(C([0,2],'a',{rb:true})),            'tar');
-t('dar   t sonoro + coda-r',     P(C([0,2],'a',{voiced:true,rb:true})),'dar');
-t('das   t sonoro + coda-s',     P(C([0],'a',{voiced:true,rb:true})),  'das');
-t('mer   m + coda-r (des·MER·ecer)', P(C([4,2],'e',{rb:true})),        'mer');
-t('sol   s + coda-l',            P(C([2,6],'o',{rb:true})),            'sol');
-t('bens  b + nasal + coda-s',    P(C([3],'e',{voiced:true,nasal:true,rb:true})), 'bens');
-t('pro   p + roll r, sem coda',  P(C([3,2],'o')),                      'pro');
-t('tra   t + roll r',            P(C([0,2],'a')),                      'tra');
-t('nho   m sonoro + roll r',     P(C([4,2],'o',{voiced:true})),        'nho');
-t('cebola  re-grafia segue valendo em C',
-  P(C([2,1],'e'),S('b','o'),S('l','a')),                               'cebola');
-console.log('  C não usa L3 nem R3 em lugar nenhum');
 
-grupo('variante D: nada é compartilhado, então nada colide');
-// D: roll = líquida (e só); L3 sonoriza; R3 nasaliza; RB coda, LB/LT o tipo
+grupo('nada é compartilhado, então nada colide');
+// roll = líquida (e só); L3 sonoriza; R3 nasaliza; RB coda, LB/LT o tipo
 const D = (gates,v,{voiced=false,nasal=false,coda=''}={}) => {
-  M.setVar('D'); M.stick.L.gates = gates;
+  M.stick.L.gates = gates;
   Object.assign(M.btn,{LB:coda==='r'?1:0, LT:coda==='l'?1:0, RB:coda?1:0,
                        L3:voiced?1:0, R3:nasal?1:0});
   const o = M.buildOnset();
@@ -165,7 +147,7 @@ t('nhos  nh + coda-s',               P(D([4,2],'o',{voiced:true,coda:'s'})), 'nh
 t('grande gr + nasal · d+e',         P(D([1,2],'a',{voiced:true,nasal:true}),S('d','e')), 'grande');
 t('pro   cluster sem coda',          P(D([3,2],'o')),                      'pro');
 t('cebola  re-grafia segue valendo', P(D([2,1],'e'),S('b','o'),S('l','a')), 'cebola');
-console.log('  D alcança as 280 formas do desenho — ao custo de L3 e R3');
+console.log('  alcança as 280 formas do desenho — ao custo de L3 e R3');
 
 grupo('roll: só primeiro, último e inversões de sentido');
 t('ai  [4,5,6,7]', N([4,5,6,7]), 'ai');

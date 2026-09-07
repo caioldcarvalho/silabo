@@ -18,7 +18,7 @@ const doc = { getElementById: id => (nos[id] ||= {innerHTML:'',textContent:'',
 const store = {};
 const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
-  corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
+  corpo + `return {satellites, renderHud, stick, btn, held, flash,
                    commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
                    setWord:w=>{word=w}, getWord:()=>word,
                    setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest, finish};`
@@ -32,12 +32,12 @@ const t=(nome,got,deve)=>{const p=deve.every(d=>got.includes(d)); p?ok++:bad++;
   console.log(`  ${nome.padEnd(30)} ${p?'ok':'X'}\n     ${got}`);
   if(!p) console.log(`     FALTA: ${deve.filter(d=>!got.includes(d)).join(', ')}`);};
 
-console.log('— satélites: variante A (líquida é BOTÃO) —');
-M.setVar('A'); Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
+console.log('— satélites —');
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.stick.L.gates=[0]; M.satellites('l');                       // ↑ = t
-t('gate ↑ (t): tl É ataque (a·tle·ta)', texto('lsat'), ['L3','d','LB','tr','LT','tl']);
+t('gate ↑ (t): tl É ataque (a·tle·ta)', texto('lsat'), ['L3','d','roll →','tr','roll ←','tl']);
 M.stick.L.gates=[3]; M.satellites('l');                       // ↘ = p, tem pr e pl
-t('gate ↘ (p): as duas líquidas', texto('lsat'), ['L3','b','LB','pr','LT','pl']);
+t('gate ↘ (p): as duas líquidas', texto('lsat'), ['L3','b','roll →','pr','roll ←','pl']);
 M.stick.L.gates=[2]; M.satellites('l');                       // → = s
 t('gate → (s): oferece ↗', texto('lsat'), ['roll ↗','c / ç']);
 t('gate → (s): NÃO oferece sr/sl',
@@ -50,12 +50,9 @@ Object.assign(M.btn,{L3:1}); M.satellites('l');               // x sonorizado = 
 t('↖ + L3 (j): vira g', texto('lsat'), ['roll ↗','g']);
 
 console.log('\n— satélites: variante B (líquida é ROLL) —');
-M.setVar('B'); Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
-M.stick.L.gates=[3]; M.satellites('l');
-t('gate ↘ (p): gatilho muda', texto('lsat'), ['LB','b','roll →','pr','roll ←','pl']);
-
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 console.log('\n— satélites: núcleo —');
-M.setVar('A'); M.stick.R.gates=[4]; M.satellites('r');        // ↓ = a
+M.stick.R.gates=[4]; M.satellites('r');        // ↓ = a
 t('gate ↓ (a)', texto('rsat'), ['R3','ã','roll ↖','ai','roll ↗','au']);
 M.stick.R.gates=[0]; M.satellites('r');                       // ↑ = sem vogal
 t('gate ↑ (—): sem satélite', texto('rsat')||'(vazio)', ['(vazio)']);
@@ -107,7 +104,17 @@ t('irmam + 3 toques → irmã',
   (()=>{M.setWord('irmaN'); for(let i=0;i<3;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmã']);
 t('e volta: mais 2 toques → irmam',
   (()=>{M.setWord('irmaN'); for(let i=0;i<5;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmam']);
-t('s↔z continua',         (()=>{M.setWord('faser');M.toggleSibilant();return M.getWord();})(), ['fazer']);
+console.log('\n— sibilante cicla ss → s → z, e funciona em fim de palavra —');
+const sib=(w,n=1)=>{M.setWord(w); for(let i=0;i<n;i++) M.toggleSibilant(); return M.getWord();};
+t('faser → fazer (intervocálico)', sib('faser'),      ['fazer']);
+// o bug que o log pegou: em "talves" o s é FINAL e o botão ficava morto
+t('talves → talvez (FINAL)',       sib('talves'),     ['talvez']);
+t('e volta',                        sib('talves',2),   ['talves']);
+t('inclussi → inclusi (ss→s)',      sib('inclussi'),   ['inclusi']);
+t('  de novo → incluzi',            sib('inclussi',2), ['incluzi']);
+t('  fecha o ciclo → inclussi',     sib('inclussi',3), ['inclussi']);
+t('sem sibilante devolve null (e a UI avisa)',
+  (()=>{M.setWord('couve'); return String(M.toggleSibilant());})(), ['null']);
 
 console.log('\n— backspace repete, e LB+LT+B limpa tudo —');
 const padFake = (b={}) => ({buttons:[0,1,2,3,12,13,14,15].map((_,i)=>({pressed:0})).concat([]),
@@ -142,30 +149,29 @@ Object.assign(M.btn,{LB:0,LT:0});
 console.log('\n— telemetria —');
 const tipos = () => M.tele.eventos.map(e=>e.tipo).join(',');
 M.tele.eventos.length = 0;
-M.setVar('A'); M.stick.L.gates=[3]; M.stick.R.gates=[4];      // p + a
+M.stick.L.gates=[3]; M.stick.R.gates=[4];      // p + a
 Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.commit();
 t('sílaba boa vira 1 evento', tipos(), ['silaba']);
 t('registra o que saiu', JSON.stringify(M.tele.eventos.at(-1).saiu), ['pa']);
 
-// RB+LB é AMBÍGUO, não perda: é também o gesto normal de coda -r. O primeiro
-// log real teve 2 "conflitos" e os dois eram digitação correta de infinitivo.
+// coda -r é só coda -r agora: LB não disputa com a líquida, então nada a relatar
 M.tele.eventos.length = 0;
-M.setVar('A'); M.stick.L.gates=[3]; M.stick.R.gates=[4];
+M.stick.L.gates=[3]; M.stick.R.gates=[4];
 Object.assign(M.btn,{LB:1,LT:0,RB:1,RT:0,L3:0,R3:0});
 M.commit();
-t('coda -r não grita conflito', tipos(), ['silaba','ambiguo']);
-t('não conta como CONFLITO',
-  tipos().includes('CONFLITO') ? 'GRITOU LOBO' : 'silencioso', ['silencioso']);
+t('coda -r não gera nem ambiguidade', tipos(), ['silaba']);
+t('nem conflito',
+  /CONFLITO|ambiguo/.test(tipos()) ? 'RELATOU ALGO' : 'silencioso', ['silencioso']);
 
 // perda REAL e silenciosa: a líquida some porque o cluster não existe
 M.tele.eventos.length = 0;
-M.stick.L.gates=[2];                                           // → = s, e "sr" não existe
-Object.assign(M.btn,{LB:1,LT:0,RB:0,RT:0,L3:0,R3:0});
+M.stick.L.gates=[2,6];      // → = s, roll até ← pede "sl", que não existe
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.commit();
 t('cluster inexistente É conflito', tipos(), ['silaba','CONFLITO']);
 t('e diz o motivo',
-  M.tele.eventos.find(e=>e.tipo==='CONFLITO').motivo, ['cluster-inexistente:sr']);
+  M.tele.eventos.find(e=>e.tipo==='CONFLITO').motivo, ['cluster-inexistente:sl']);
 
 M.tele.eventos.length = 0;
 M.stick.L.gates=[]; M.stick.R.gates=[];
