@@ -5,3 +5,6 @@ dist/
 tools/.pt_br_50k.txt
 pad_*.png
 pad_*.svg
+.screenshot.html
+vazio.png
+uso.png

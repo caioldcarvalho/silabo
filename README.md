@@ -174,10 +174,16 @@ vermelho, porque um roll é uma sequência e uma posição só não a mostra. Se
 gravação de tela: quem assiste vê o polegar e os botões no mesmo quadro que o
 texto que saiu.
 
-Para conferir o desenho sem abrir o navegador (precisa de `rsvg-convert`):
+O controle e o texto ficam **lado a lado**, meia coluna cada, para caberem na
+mesma tela sem zoom out — com as rodas logo abaixo, tudo o que importa durante a
+digitação termina dentro dos primeiros 660px.
+
+Para conferir sem abrir o navegador:
 
 ```fish
-node tools/pad-preview.mjs
+node tools/pad-preview.mjs        # o desenho do controle em PNG (rsvg-convert)
+node tools/screenshot.mjs --uso   # a página inteira, com uma sessão simulada
+node tools/screenshot.mjs --medir # as caixas e a altura da página
 ```
 
 Duas suítes de regressão, sem dependências:
