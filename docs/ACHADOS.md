@@ -425,6 +425,48 @@ Sem correção decidida.
 
 ---
 
+## 7. Segunda sessão medida (07/09, 20h) — 110 sílabas
+
+Log em [`sessao-2026-09-07b.json`](sessao-2026-09-07b.json). Frases reais
+("agora é a ora da verdade. todas as opçois tiveram seus problemas").
+
+**Taxa de erro: 14%** — 15 de 110 sílabas foram apagadas em menos de 3s. É a
+primeira linha de base honesta do projeto.
+
+### 112 apagamentos, e só 1 era de palavra
+
+O número parecia frustração e não era: eram **rajadas limpando a tela letra por
+letra** — uma delas com **50 apagamentos em 10,3s** para apagar uma frase.
+
+A causa é desenho meu: segurar B apagava **uma** palavra e depois travava até
+soltar. Limpar oito palavras exigia oito ciclos de segurar-e-soltar de 450ms;
+martelar o B era mais rápido, e foi o que aconteceu. Backspace tem que
+**repetir**, como em qualquer campo de texto:
+
+- toque → uma letra
+- segurando >400ms → repete letra a cada 90ms
+- passando de 1,2s → passa a apagar **palavra** a cada 220ms
+- `LB`+`LT`+`B` → **limpa tudo** (três dedos, não sai por acidente), e há um
+  botão "Limpar texto" na tela
+
+A rajada agora também vira **um evento** no log em vez de cinquenta.
+
+### A variante C não chegou a ser testada
+
+Ele selecionou C às 20:27:34 e voltou para A **23 segundos depois, sem uma única
+sílaba** — nenhum evento de commit, nem sequer um `vazio`. O motivo não está no
+log: ou o painel de atalhos não deixou claro o que mudou, ou não era hora.
+Continua sem evidência a favor ou contra.
+
+### Bugs de instrumentação achados pelo próprio log
+
+- **`de` e `para` sempre iguais** nas trocas de variante (`C → C`): eu gravava
+  `de: variant` **depois** de já ter atribuído o novo valor.
+- **O log é cumulativo** e junta sessões sem marca, porque persiste em
+  localStorage. Agora cada carga da página grava um evento `sessao`.
+
+---
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,

@@ -20,7 +20,8 @@ const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
                    commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
-                   setWord:w=>{word=w}, getWord:()=>word};`
+                   setWord:w=>{word=w}, getWord:()=>word,
+                   setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
   {getItem:k=>store[k]??null, setItem:(k,v)=>{store[k]=v}, removeItem:k=>{delete store[k]}},
   fn=>fn(), function(){}, {createObjectURL:()=>'', revokeObjectURL(){}});
@@ -102,6 +103,36 @@ t('NÃO pula pra vogal anterior', ciclo('cafe',2), ['cafê']);
 console.log('  ↑ era o bug: 2 toques acentuavam o "a" em vez de reverter o "e"');
 t('só: o tem 4 estados',  ciclo('so',1),    ['só']);
 t('s↔z continua',         (()=>{M.setWord('faser');M.toggleSibilant();return M.getWord();})(), ['fazer']);
+
+console.log('\n— backspace repete, e LB+LT+B limpa tudo —');
+const padFake = (b={}) => ({buttons:[0,1,2,3,12,13,14,15].map((_,i)=>({pressed:0})).concat([]),
+  axes:[0,0,0,0]});
+// monta um pad com B apertado no índice 1
+const pad = press => ({buttons:Array.from({length:16},(_,i)=>({pressed: press.includes(i)?1:0, value:0})),
+                       axes:[0,0,0,0], mapping:'standard', id:'fake'});
+M.stick.L.gates=[]; M.stick.R.gates=[]; M.stick.L.live=null; M.stick.R.live=null;
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
+M.setText('uma frase inteira aqui '); M.setWord('');
+Object.assign(M.face,{A:0,B:0,X:0,Y:0,heldB:0,nextB:0,apagados:0});
+M.faceButtons(pad([1]));            // aperta B: apaga 1
+t('toque em B apaga uma letra', M.getText(), ['uma frase inteira aqui']);
+M.faceButtons(pad([1]));            // segurando: ainda dentro da espera
+M.faceButtons(pad([1]));
+t('não dispara antes da espera', M.getText(), ['uma frase inteira aqui']);
+
+// segurando de verdade: adianta o relógio interno
+M.face.heldB -= 2000; M.face.nextB -= 2000;
+M.faceButtons(pad([1]));
+t('segurando passa a apagar por palavra',
+  M.getText().length < 'uma frase inteira aqui'.length ? 'apagou palavra' : 'NÃO APAGOU', ['apagou palavra']);
+
+// LB+LT+B limpa tudo
+M.setText('nao deveria sobrar nada'); M.setWord('resto');
+Object.assign(M.face,{A:0,B:0,X:0,Y:0,heldB:0,nextB:0,apagados:0});
+Object.assign(M.btn,{LB:1,LT:1});
+M.faceButtons(pad([1]));
+t('LB+LT+B limpa tudo', JSON.stringify([M.getText(),M.getWord()]), ['["",""]']);
+Object.assign(M.btn,{LB:0,LT:0});
 
 console.log('\n— telemetria —');
 const tipos = () => M.tele.eventos.map(e=>e.tipo).join(',');

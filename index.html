@@ -83,10 +83,12 @@ svg{display:block;width:100%;height:auto}
   letter-spacing:.02em;min-height:40px;color:var(--hot);
 }
 #syl .dim{color:var(--line)}
+.rot{font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
+.rot span{color:var(--line)}
+.rot2{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
 #parts{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);min-height:18px}
 #out{
   font-family:"IBM Plex Mono",monospace;font-size:18px;line-height:1.6;
-  border-top:1px solid var(--line);margin-top:12px;padding-top:12px;
   min-height:96px;white-space:pre-wrap;word-break:break-word;
 }
 #out i{font-style:normal;background:var(--hot);color:var(--bg);animation:c 1s steps(2) infinite}
@@ -133,8 +135,10 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
   </div>
 
   <div class="readout">
+    <div class="rot">sílaba no ar <span>— o que sai quando você confirmar</span></div>
     <div id="syl"><span class="dim">—</span></div>
     <div id="parts"></div>
+    <div class="rot rot2">texto</div>
     <div id="out"><i>&nbsp;</i></div>
   </div>
 </div>
@@ -166,6 +170,7 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
     <button class="reset" id="rs">Zerar medição</button>
     <div class="tele">
       <span id="tc">log: 0 eventos</span>
+      <button class="reset" id="wipe">Limpar texto</button>
       <button class="reset" id="tdl">Baixar log</button>
       <button class="reset" id="tclr">Limpar</button>
     </div>
@@ -465,6 +470,10 @@ let tele = {inicio:new Date().toISOString(), agente:navigator.userAgent, pads:[]
 try{ const salvo = JSON.parse(localStorage.getItem(TELE_KEY)||'null');
      if(salvo && Array.isArray(salvo.eventos)) tele = salvo; }catch(e){}
 
+// The log survives reloads, so sessions run together. Mark where each begins.
+tele.eventos.push({ts:new Date().toISOString().slice(11,23), tipo:'sessao',
+                   inicio:new Date().toISOString()});
+
 let teleTimer = 0;
 function tsave(){
   if(teleTimer) return;
@@ -734,7 +743,9 @@ const BINDS = {
      ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
      ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['A','espaço'],['A + RB','enter'],
+     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
+     ['LB + LT + B','limpa o texto todo'],
      ['X','ponto final'],['Y','interrogação']],
   B:[['analógico esq.','ataque (8 direções)'],['roll no esq. →','+r   pr, gr   ·   nr→nh'],
      ['roll no esq. ←','+l   pl, cl, fl'],['LB','sonoriza  t→d  s→z  c→g'],
@@ -750,7 +761,9 @@ const BINDS = {
      ['','a á â ã à  ·  e é ê  ·  o ó ô õ'],
      ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['A','espaço'],['A + RB','enter'],
+     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
+     ['LB + LT + B','limpa o texto todo'],
      ['X','ponto final'],['Y','interrogação']],
   C:[['analógico esq.','ataque (8 direções)'],
      ['roll do esq. →','+r   pr, gr   ·   nr→nh'],['roll do esq. ←','+l   pl, cl, fl'],
@@ -769,7 +782,9 @@ const BINDS = {
      ['→ / ←','cicla o acento da última vogal'],
      ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
-     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['A','espaço'],['A + RB','enter'],
+     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
+     ['LB + LT + B','limpa o texto todo'],
      ['X','ponto final'],['Y','interrogação']]
 };
 function paintBinds(){
@@ -780,8 +795,15 @@ function paintBinds(){
 // -------------------------------------------------- buttons outside a syllable
 // Face buttons only act with BOTH sticks at rest: during typing the thumbs are
 // on the sticks, so these can never fire by accident mid-syllable.
-const face = {A:0,B:0,X:0,Y:0,heldB:0};
+// Backspace REPEATS while held, the way every text field does. The first
+// version deleted one word and then latched until release, so clearing a
+// sentence meant eight hold-and-release cycles — hammering B was faster, and
+// that is exactly what the log showed: 112 deletions, only 1 of them a word.
+const face = {A:0,B:0,X:0,Y:0,heldB:0,nextB:0,apagados:0};
+const B_ESPERA = 400, B_LETRA = 90, B_PALAVRA = 220, B_VIRA_PALAVRA = 1200;
 function atRest(){ return stick.L.live===null && stick.R.live===null; }
+
+function apagaUm(){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
 
 function endWord(suffix){
   if(word) tlog('palavra', {palavra:finish(word), fim:suffix.trim()||'espaço'});
@@ -879,16 +901,34 @@ function faceButtons(pad){
     if(now.A && !face.A) btn.RB ? endWord('\n') : endWord(' ');
     if(now.X && !face.X) endWord('. ');
     if(now.Y && !face.Y) endWord('? ');
-    // B = backspace, held = delete the whole word
-    if(now.B && !face.B){ face.heldB = performance.now();
-      tlog('apaga', {alvo:'letra', antes:finish(word)||text.slice(-14)});
-      if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
-    if(now.B && face.heldB && performance.now()-face.heldB > 450){
-      face.heldB = performance.now()+1e9;   // fires once
-      tlog('apaga', {alvo:'palavra', antes:finish(word)||text.slice(-20)});
-      if(word) word=''; else text = text.replace(/\S*\s*$/,'');
+    // B = backspace. LB+LT+B wipes everything — three fingers, so it does not
+    // happen by accident, and the log had a 50-deletion burst clearing a
+    // sentence one letter at a time.
+    if(now.B && !face.B){
+      if(btn.LB && btn.LT){
+        tlog('apaga', {alvo:'tudo', antes:(text+word).slice(-40)});
+        text=''; word=''; face.heldB=0;
+      } else {
+        face.heldB = performance.now(); face.nextB = face.heldB + B_ESPERA;
+        face.apagados = 1;
+        apagaUm();
+      }
+    } else if(now.B && face.heldB){
+      const agora = performance.now(), t = agora - face.heldB;
+      if(agora >= face.nextB){
+        const porPalavra = t > B_VIRA_PALAVRA;
+        if(porPalavra){ if(word) word=''; else text = text.replace(/\S*\s*$/,''); }
+        else apagaUm();
+        face.apagados++;
+        face.nextB = agora + (porPalavra ? B_PALAVRA : B_LETRA);
+      }
     }
-    if(!now.B) face.heldB = 0;
+    // one event per burst instead of one per character — the log is for reading
+    if(!now.B && face.B && face.heldB){
+      tlog('apaga', {alvo: face.apagados>1 ? 'rajada' : 'letra',
+                     quantos: face.apagados, restou: (text+word).slice(-24)});
+      face.heldB = 0; face.apagados = 0;
+    }
   }
   Object.assign(face, now);
 }
@@ -949,7 +989,10 @@ addEventListener('keydown',e=>{
   if(KEYBTN[e.code]) kbBtn[KEYBTN[e.code]]=1;
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
   if(e.code==='Enter'){ text+=finish(word)+' '; word=''; flash('A'); }
-  if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); flash('B'); e.preventDefault(); }
+  if(e.code==='Backspace'){
+    if(e.ctrlKey||e.shiftKey){ tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; }
+    else apagaUm();
+    flash('B'); e.preventDefault(); }
   if(e.code==='ArrowRight'){ cycleAccent(+1); flash('right'); e.preventDefault(); }
   if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
   if(e.code==='ArrowDown'){  toggleSibilant(); flash('down');  e.preventDefault(); }
@@ -967,6 +1010,7 @@ document.getElementById('vA').onclick=()=>setVariant('A');
 document.getElementById('vB').onclick=()=>setVariant('B');
 document.getElementById('vC').onclick=()=>setVariant('C');
 function setVariant(v){
+  const antes = variant;      // ler ANTES de trocar: o log saía sempre "C → C"
   variant=v;
   for(const k of ['A','B','C'])
     document.getElementById('v'+k).classList.toggle('sel',v===k);
@@ -976,10 +1020,12 @@ function setVariant(v){
   const recentes = tele.eventos.slice(-8)
     .filter(e=>['silaba','apaga','ambiguo','CONFLITO'].includes(e.tipo))
     .map(e=>e.tipo==='silaba' ? `${e.gesto}→${e.saiu}` : `${e.tipo}:${e.motivo||e.alvo||''}`);
-  tlog('variante', {de:variant, para:v, antesDisso:recentes});
+  tlog('variante', {de:antes, para:v, antesDisso:recentes});
   paintBinds(); resetMetrics();
 }
 document.getElementById('rs').onclick=resetMetrics;
+document.getElementById('wipe').onclick=()=>{
+  tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; render(); };
 document.getElementById('tdl').onclick=baixarTele;
 document.getElementById('tclr').onclick=limparTele;
 function resetMetrics(){ m={g:0,c:0,t0:0}; render(); }
