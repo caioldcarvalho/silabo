@@ -147,9 +147,39 @@ botão novo e sem modo — e **generaliza o princípio que o desenho já usava**
 
 ### O orçamento de slots
 
-Das 32 combinações ataque×líquida, só 13 são clusters reais em português
-(`tr cr cl pr pl fr fl dr gr gl br bl vr`) e 4 já estavam reaproveitadas
-(`nr`→nh, `lr`→lh, `rr`→rr, `mr`). **Sobram 15 buracos livres.**
+Das 32 combinações ataque×líquida, **16 são ataques complexos bem-formados** e 4
+estavam reaproveitadas como dígrafos (`nr`→nh, `lr`→lh, `rr`→rr, `mr`).
+
+**Corrigido em 07/09, e a correção é do Caio.** Eu tinha listado `tl` como
+inexistente, alegando que "atleta" silabifica at·le·ta. Ele derrubou em um passo:
+*"at.le.ta implicaria que t existe em coda e eu sei que NÃO existe"*. As codas do
+português são só /S R l N/ — nenhuma oclusiva. Logo `a·tle·ta`, e `tl` **é**
+ataque complexo.
+
+E isso não é um item de lista, é a regra inteira:
+
+> Uma sequência CC é **ataque complexo** apenas quando C1 **não pode ser coda** —
+> senão a língua lê como coda + ataque.
+
+| palavra | leitura | por quê |
+|---|---|---|
+| atleta | a·**tle**·ta | /t/ não pode ser coda → só resta ataque complexo |
+| desligar | de**s**·**l**i·gar | /S/ é coda lícita → não é ataque complexo |
+
+Foi por isso que a primeira medição errou: um regex `VccV` conta as duas
+leituras juntas. `sl` aparece em 114 formas do corpus e **nenhuma** é ataque —
+são "desligar", "desligue", "island". `tl` aparece em 33 e as portuguesas
+(atleta, atlântico, atlas, atlético) são ataque de verdade.
+
+**O ganho colateral:** as consoantes excluídas são exatamente as **sibilantes**
+(s, z, x, j) — que são exatamente as que `RESPELL` serve. É o mesmo fato dito
+duas vezes: *sibilante não toma líquida, então o slot de roll dela está livre
+para significar grafia*. O conjunto passou a ser derivado no código
+(`clusterOk`), não listado.
+
+`dl` e `vl` passam pela regra e o léxico nativo não os usa (só bradley, vladimir,
+kevlar) — são gap **acidental**, não sistemático. Ficam habilitados de propósito:
+custa nada e serve para estrangeirismo, que o desenho já assume.
 
 | gesto | grafia | resolve |
 |---|---|---|

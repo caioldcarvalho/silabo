@@ -26,10 +26,7 @@ const t=(nome,got,deve)=>{const p=deve.every(d=>got.includes(d)); p?ok++:bad++;
 console.log('— satélites: variante A (líquida é BOTÃO) —');
 M.setVar('A'); Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.stick.L.gates=[0]; M.satellites('l');                       // ↑ = t
-t('gate ↑ (t): só tr, pois tl não é ataque em PT',
-  texto('lsat'), ['L3','d','LB','tr']);
-t('gate ↑ (t): NÃO oferece tl',
-  /\btl\b/.test(texto('lsat')) ? 'OFERECEU tl' : 'tl ausente', ['ausente']);
+t('gate ↑ (t): tl É ataque (a·tle·ta)', texto('lsat'), ['L3','d','LB','tr','LT','tl']);
 M.stick.L.gates=[3]; M.satellites('l');                       // ↘ = p, tem pr e pl
 t('gate ↘ (p): as duas líquidas', texto('lsat'), ['L3','b','LB','pr','LT','pl']);
 M.stick.L.gates=[2]; M.satellites('l');                       // → = s

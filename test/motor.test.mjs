@@ -76,14 +76,18 @@ t('faser → d-pad ↓ → fazer', (()=>{ let w=''; for(const x of [S('f','a'),S
    const i=hits[hits.length-1].index+1; return M.finish(w.slice(0,i)+'z'+w.slice(i+1)); })(), 'fazer');
 
 grupo('cluster fonotaticamente ilegal não vira lixo');
-const LIQ = (gates,liq,v) => { M.setVar('A'); M.stick.L.gates=gates;
+const LIQ = (gates,liq,v,{c=''}={}) => { M.setVar('A'); M.stick.L.gates=gates;
   Object.assign(M.btn,{LB:liq==='r'?1:0, LT:liq==='l'?1:0, RB:0, L3:0, R3:0});
-  const o=M.buildOnset(); return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:''}; };
+  const o=M.buildOnset(); return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:c}; };
 t('s + LB  (sr não existe)', P(LIQ([2],'r','a')),  'sa');
 t('s + LT  (sl não existe)', P(LIQ([2],'l','a')),  'sa');
 t('x + LB  (xr não existe)', P(LIQ([7],'r','a')),  'xa');
 t('t + LB  (tr existe)',     P(LIQ([0],'r','a')),  'tra');
 t('p + LT  (pl existe)',     P(LIQ([3],'l','a')),  'pla');
+// /t/ não pode ser coda, então "atleta" só pode ser a·tle·ta: tl É ataque
+t('atleta [ +a][t+LT e][t+a]', P(S('','a'),LIQ([0],'l','e'),S('t','a')), 'atleta');
+t('atlas  [ +a][t+LT a coda-s]', P(S('','a'),LIQ([0],'l','a',{c:'s'})), 'atlas');
+t('atlas  [ +a][t+LT a][s sem vogal]', P(S('','a'),LIQ([0],'l','a'),S('s','')), 'atlas');
 
 grupo('roll acidental degrada para o gate simples');
 t('só ↗ não re-grafa (c)',  P(R([1],'a')),        'ca');

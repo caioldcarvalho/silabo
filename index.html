@@ -175,12 +175,20 @@ const DIGRAPH = {'nr':'nh','lr':'lh','rr':'rr','mr':'nh'};
 // The rule is ONE motor fact, not a table of pairs: "the sound of the gate you
 // started on, written with the letter that lives at ↗" (c, or g when voiced).
 // Belongs to the ORTHOGRAPHER — another language replaces this wholesale.
-// Which onset+liquid clusters Portuguese actually allows. Anything outside this
-// set and outside DIGRAPH is simply not a thing — so the liquid is IGNORED
-// rather than written out as garbage ("sr", "xl"). This is phonotactics, which
-// belongs to the resolver.
-const LIQUID_OK = new Set(['pr','br','tr','dr','cr','gr','fr','vr',
-                           'pl','bl','cl','gl','fl']);
+// A CC sequence is a COMPLEX ONSET only when C1 cannot be a coda — otherwise
+// the language reads it as coda + onset instead. Portuguese codas are just
+// /S R l N/: no stop, no /f v/. That is the whole rule, and it explains both
+// sides at once:
+//   "atleta"   → a·tle·ta    /t/ cannot be a coda, so /tl/ must be one onset
+//   "desligar" → des·li·gar  /S/ is a perfectly good coda, so /sl/ is not
+// So the set is DERIVED, not listed. And the consonants left out are exactly
+// the sibilants — which are exactly the ones RESPELL serves. Same fact twice:
+// a sibilant takes no liquid, so its roll slot is free to mean spelling.
+const SIBILANT = new Set(['s','z','x','j']);   // realize the coda /S/
+const SONORANT = new Set(['m','n','l','r']);   // are codas themselves; see DIGRAPH
+const LIQUIDS  = new Set(['r','l']);
+const clusterOk = (c1,c2) =>
+  LIQUIDS.has(c2) && !SIBILANT.has(c1) && !SONORANT.has(c1);
 
 const RESPELL_GATE = 1;                       // ↗ — where c/g live
 const RESPELL = {
@@ -258,8 +266,8 @@ function buildOnset(){
   }
   if(!liq) return {c:base,respell};
   const pair = base+liq;
-  if(DIGRAPH[pair])     return {c:DIGRAPH[pair], respell:false};
-  if(LIQUID_OK.has(pair)) return {c:pair, respell:false};
+  if(DIGRAPH[pair])          return {c:DIGRAPH[pair], respell:false};
+  if(clusterOk(base,liq))    return {c:pair, respell:false};
   return {c:base, respell};   // illegal cluster: the liquid does not apply
 }
 
@@ -322,8 +330,9 @@ function orthograph(prevWord, syl){
     // /k/ and /g/ need a mute u before front vowels
     if(onset==='c' && front) onset='qu';
     if(onset==='g' && front) onset='gu';
-    // intervocalic /s/ doubles — a bare s between vowels already reads /z/
-    if(onset==='s' && afterVowel) onset='ss';
+    // intervocalic /s/ doubles — a bare s between vowels already reads /z/.
+    // Needs a vowel on BOTH sides: "atlas" ends in a bare s, not "atlass".
+    if(onset==='s' && afterVowel && vowel) onset='ss';
     // /z/ between vowels is written ⟨s⟩ in 1.86x more tokens than ⟨z⟩
     // (casa, mesa, coisa, precisa). ⟨z⟩ is the marked case and costs the
     // d-pad toggle — measured, see tools/corpus.mjs.
@@ -428,7 +437,7 @@ function satellites(side){
     const b = voiced ? VOICED[base] : base;
     const liga = (p) => DIGRAPH[p] || p;
     itens.push([0,-30, variant==='A'?'L3':'LB', VOICED[base], !!voiced]);
-    const vale = p => DIGRAPH[p] || (LIQUID_OK.has(p) ? p : null);
+    const vale = p => DIGRAPH[p] || (clusterOk(p[0],p[1]) ? p : null);
     if(vale(b+'r')) itens.push([38,6,  variant==='A'?'LB':'roll →', liga(b+'r'), variant==='A' ? (!!btn.LB&&!btn.RB) : false]);
     if(vale(b+'l')) itens.push([-38,6, variant==='A'?'LT':'roll ←', liga(b+'l'), variant==='A' ? (!!btn.LT&&!btn.RB) : false]);
     if(RESPELL[b]) itens.push([0,32,'roll ↗', RESPELL[b](true)+(b==='s'?' / '+RESPELL[b](false):''), false]);
