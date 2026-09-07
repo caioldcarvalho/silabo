@@ -1,0 +1,1513 @@
+{
+ "inicio": "2026-09-07T20:36:42.202Z",
+ "agente": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:155.0) Gecko/20100101 Firefox/155.0",
+ "pads": [
+  {
+   "id": "xinput",
+   "mapping": "standard",
+   "botoes": 17,
+   "eixos": 4,
+   "eixosEmRepouso": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "visto": "2026-09-07T20:38:29.836Z"
+  }
+ ],
+ "eventos": [
+  {
+   "ts": "20:39:28.318",
+   "tipo": "vazio",
+   "gesto": "L:· R:↑↖ [RT]",
+   "variante": "A"
+  },
+  {
+   "ts": "20:39:32.805",
+   "tipo": "silaba",
+   "gesto": "L:· R:↖ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "i",
+   "palavra": "i"
+  },
+  {
+   "ts": "20:39:34.155",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "antes": "i"
+  },
+  {
+   "ts": "20:42:48.693",
+   "tipo": "vazio",
+   "gesto": "L:· R:· [RT]",
+   "variante": "A"
+  },
+  {
+   "ts": "20:46:00.268",
+   "tipo": "sessao",
+   "inicio": "2026-09-07T20:46:00.268Z"
+  },
+  {
+   "ts": "20:46:09.159",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": ""
+  },
+  {
+   "ts": "20:46:09.572",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": ""
+  },
+  {
+   "ts": "20:46:09.821",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": ""
+  },
+  {
+   "ts": "20:46:10.764",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": ""
+  },
+  {
+   "ts": "20:46:18.136",
+   "tipo": "silaba",
+   "gesto": "L:· R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "o",
+   "palavra": "o"
+  },
+  {
+   "ts": "20:46:18.689",
+   "tipo": "palavra",
+   "palavra": "o",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:20.331",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:↓ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "ta",
+   "palavra": "ta"
+  },
+  {
+   "ts": "20:46:21.736",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "u",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "tu",
+   "palavra": "tatu"
+  },
+  {
+   "ts": "20:46:22.117",
+   "tipo": "palavra",
+   "palavra": "tatu",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:23.739",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "co",
+   "palavra": "co"
+  },
+  {
+   "ts": "20:46:26.694",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:←↖↑↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "m",
+    "nucleo": "eu",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "meu",
+   "palavra": "comeu"
+  },
+  {
+   "ts": "20:46:27.234",
+   "tipo": "palavra",
+   "palavra": "comeu",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:27.804",
+   "tipo": "silaba",
+   "gesto": "L:· R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "o",
+   "palavra": "o"
+  },
+  {
+   "ts": "20:46:28.100",
+   "tipo": "palavra",
+   "palavra": "o",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:30.444",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "u",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "cu",
+   "palavra": "cu"
+  },
+  {
+   "ts": "20:46:36.507",
+   "tipo": "silaba",
+   "gesto": "L:→ R:↖ [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "z",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "si",
+   "palavra": "cusi"
+  },
+  {
+   "ts": "20:46:38.714",
+   "tipo": "dpad",
+   "op": "s↔z",
+   "virou": "cuzi"
+  },
+  {
+   "ts": "20:46:45.184",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:→ [LB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "nh",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "nho",
+   "palavra": "cuzinho"
+  },
+  {
+   "ts": "20:46:45.552",
+   "tipo": "palavra",
+   "palavra": "cuzinho",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:47.355",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:→ [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "d",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "do",
+   "palavra": "do"
+  },
+  {
+   "ts": "20:46:47.756",
+   "tipo": "palavra",
+   "palavra": "do",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:50.043",
+   "tipo": "silaba",
+   "gesto": "L:← R:↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "u",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "lu",
+   "palavra": "lu"
+  },
+  {
+   "ts": "20:46:53.356",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:↓ [RB+RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "cas",
+   "palavra": "lucas"
+  },
+  {
+   "ts": "20:46:53.740",
+   "tipo": "palavra",
+   "palavra": "lucas",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:46:56.804",
+   "tipo": "silaba",
+   "gesto": "L:→ R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "se",
+   "palavra": "se"
+  },
+  {
+   "ts": "20:46:57.987",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "meu o cuzinho do lucas s"
+  },
+  {
+   "ts": "20:46:58.270",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "omeu o cuzinho do lucas "
+  },
+  {
+   "ts": "20:47:01.766",
+   "tipo": "silaba",
+   "gesto": "L:→ R:← [RT+R3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "e",
+    "nasal": true,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "sem",
+   "palavra": "sem"
+  },
+  {
+   "ts": "20:47:02.126",
+   "tipo": "palavra",
+   "palavra": "sem",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:47:04.025",
+   "tipo": "silaba",
+   "gesto": "L:← R:↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "u",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "lu",
+   "palavra": "lu"
+  },
+  {
+   "ts": "20:47:11.226",
+   "tipo": "silaba",
+   "gesto": "L:↘ R:↖ [LB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "br",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "bri",
+   "palavra": "lubri"
+  },
+  {
+   "ts": "20:47:12.803",
+   "tipo": "silaba",
+   "gesto": "L:↙ R:↖ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "f",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "fi",
+   "palavra": "lubrifi"
+  },
+  {
+   "ts": "20:47:16.096",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:↓ [RT+R3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "a",
+    "nasal": true,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "cã",
+   "palavra": "lubrificã"
+  },
+  {
+   "ts": "20:47:17.960",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "nte",
+   "palavra": "lubrificante"
+  },
+  {
+   "ts": "20:47:20.545",
+   "tipo": "palavra",
+   "palavra": "lubrificante",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:47:22.486",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:47:22.781",
+   "tipo": "palavra",
+   "palavra": "e",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:47:23.723",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:47:25.000",
+   "tipo": "silaba",
+   "gesto": "L:← R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "le",
+   "palavra": "ele"
+  },
+  {
+   "ts": "20:47:25.365",
+   "tipo": "palavra",
+   "palavra": "ele",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:47:30.111",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:→ [RB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "g",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "gos",
+   "palavra": "gos"
+  },
+  {
+   "ts": "20:47:32.244",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:→↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "ou",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "tou",
+   "palavra": "gostou"
+  },
+  {
+   "ts": "20:47:33.606",
+   "tipo": "palavra",
+   "palavra": "gostou",
+   "fim": "."
+  },
+  {
+   "ts": "20:47:36.162",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "rificante e ele gostou. "
+  },
+  {
+   "ts": "20:47:36.679",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "brificante e ele gostou."
+  },
+  {
+   "ts": "20:47:36.979",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "ubrificante e ele gostou"
+  },
+  {
+   "ts": "20:47:37.774",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "lubrificante e ele gosto"
+  },
+  {
+   "ts": "20:47:37.972",
+   "tipo": "vazio",
+   "gesto": "L:· R:· [LT+RT]",
+   "variante": "A"
+  },
+  {
+   "ts": "20:47:38.360",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": " lubrificante e ele gost"
+  },
+  {
+   "ts": "20:47:38.637",
+   "tipo": "vazio",
+   "gesto": "L:· R:· [LT+RT]",
+   "variante": "A"
+  },
+  {
+   "ts": "20:47:42.145",
+   "tipo": "apaga",
+   "alvo": "rajada",
+   "quantos": 20,
+   "restou": ""
+  },
+  {
+   "ts": "20:47:58.786",
+   "tipo": "variante",
+   "de": "A",
+   "para": "B",
+   "antesDisso": [
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:rajada"
+   ]
+  },
+  {
+   "ts": "20:48:00.888",
+   "tipo": "variante",
+   "de": "B",
+   "para": "C",
+   "antesDisso": [
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:letra",
+    "apaga:rajada"
+   ]
+  },
+  {
+   "ts": "20:50:48.951",
+   "tipo": "silaba",
+   "gesto": "L:· R:→ [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "o",
+   "palavra": "o"
+  },
+  {
+   "ts": "20:50:49.581",
+   "tipo": "palavra",
+   "palavra": "o",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:50:51.356",
+   "tipo": "silaba",
+   "gesto": "L:← R:↗ [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "u",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "lu",
+   "palavra": "lu"
+  },
+  {
+   "ts": "20:50:54.154",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:↓ [RB+RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "cas",
+   "palavra": "lucas"
+  },
+  {
+   "ts": "20:50:54.573",
+   "tipo": "palavra",
+   "palavra": "lucas",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:50:55.362",
+   "tipo": "silaba",
+   "gesto": "L:· R:↙ [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "",
+    "nucleo": "é",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "é",
+   "palavra": "é"
+  },
+  {
+   "ts": "20:50:55.720",
+   "tipo": "palavra",
+   "palavra": "é",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:00.770",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:←↖ [LB+RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "g",
+    "nucleo": "ei",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "guei",
+   "palavra": "guei"
+  },
+  {
+   "ts": "20:51:01.146",
+   "tipo": "palavra",
+   "palavra": "guei",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:03.142",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:51:07.764",
+   "tipo": "palavra",
+   "palavra": "e",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:08.526",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:51:09.371",
+   "tipo": "silaba",
+   "gesto": "L:← R:← [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "le",
+   "palavra": "ele"
+  },
+  {
+   "ts": "20:51:09.789",
+   "tipo": "palavra",
+   "palavra": "ele",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:14.241",
+   "tipo": "silaba",
+   "gesto": "L:↙ R:↓↙←↖ [LB+RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "v",
+    "nucleo": "ai",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "vai",
+   "palavra": "vai"
+  },
+  {
+   "ts": "20:51:14.556",
+   "tipo": "palavra",
+   "palavra": "vai",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:22.428",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:→ [RT+R3]",
+   "variante": "C",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "co",
+   "palavra": "co"
+  },
+  {
+   "ts": "20:51:23.962",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "lucas é guei e ele vai c"
+  },
+  {
+   "ts": "20:51:24.178",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": " lucas é guei e ele vai "
+  },
+  {
+   "ts": "20:51:33.186",
+   "tipo": "silaba",
+   "gesto": "L:↗ R:→ [LT+RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "o",
+    "nasal": true,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "com",
+   "palavra": "com"
+  },
+  {
+   "ts": "20:51:37.442",
+   "tipo": "silaba",
+   "gesto": "L:↘→ R:→ [RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "pr",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "pro",
+   "palavra": "compro"
+  },
+  {
+   "ts": "20:51:46.316",
+   "tipo": "silaba",
+   "gesto": "L:↙↓ R:↓↘ [LB+RB+RT]",
+   "variante": "C",
+   "partes": {
+    "ataque": "v",
+    "nucleo": "au",
+    "nasal": false,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "vaus",
+   "palavra": "comprovaus"
+  },
+  {
+   "ts": "20:51:48.994",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": "guei e ele vai coNprovau"
+  },
+  {
+   "ts": "20:51:49.294",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": " guei e ele vai coNprova"
+  },
+  {
+   "ts": "20:51:51.180",
+   "tipo": "variante",
+   "de": "C",
+   "para": "A",
+   "antesDisso": [
+    "L:↗ R:→ [RT+R3]→co",
+    "apaga:letra",
+    "apaga:letra",
+    "L:↗ R:→ [LT+RT]→com",
+    "L:↘→ R:→ [RT]→pro",
+    "L:↙↓ R:↓↘ [LB+RB+RT]→vaus",
+    "apaga:letra",
+    "apaga:letra"
+   ]
+  },
+  {
+   "ts": "20:51:55.794",
+   "tipo": "silaba",
+   "gesto": "L:← R:· [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "r",
+    "nucleo": "",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "r",
+   "palavra": "comprovar"
+  },
+  {
+   "ts": "20:51:56.135",
+   "tipo": "palavra",
+   "palavra": "comprovar",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:51:57.261",
+   "tipo": "silaba",
+   "gesto": "L:· R:↖ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "i",
+   "palavra": "i"
+  },
+  {
+   "ts": "20:51:58.405",
+   "tipo": "silaba",
+   "gesto": "L:→ R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "sso",
+   "palavra": "isso"
+  },
+  {
+   "ts": "20:51:58.761",
+   "tipo": "palavra",
+   "palavra": "isso",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:06.007",
+   "tipo": "silaba",
+   "gesto": "L:· R:↓ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "a",
+   "palavra": "a"
+  },
+  {
+   "ts": "20:52:06.553",
+   "tipo": "silaba",
+   "gesto": "L:· R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "o",
+   "palavra": "ao"
+  },
+  {
+   "ts": "20:52:06.854",
+   "tipo": "palavra",
+   "palavra": "ao",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:10.971",
+   "tipo": "silaba",
+   "gesto": "L:· R:↖ [RB+RT+R3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "i",
+    "nasal": true,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "ins",
+   "palavra": "ins"
+  },
+  {
+   "ts": "20:52:12.457",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:↓ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "ta",
+   "palavra": "insta"
+  },
+  {
+   "ts": "20:52:12.737",
+   "tipo": "palavra",
+   "palavra": "insta",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:18.590",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:← [RB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "d",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "s",
+    "regrafia": false
+   },
+   "saiu": "des",
+   "palavra": "des"
+  },
+  {
+   "ts": "20:52:20.266",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "m",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "me",
+   "palavra": "desme"
+  },
+  {
+   "ts": "20:52:22.482",
+   "tipo": "silaba",
+   "gesto": "L:← R:← [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "r",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "re",
+   "palavra": "desmere"
+  },
+  {
+   "ts": "20:52:27.067",
+   "tipo": "silaba",
+   "gesto": "L:→↗ R:← [LB+RB+RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "r",
+    "regrafia": true
+   },
+   "saiu": "cer",
+   "palavra": "desmerecer"
+  },
+  {
+   "ts": "20:52:27.067",
+   "tipo": "ambiguo",
+   "gesto": "L:→↗ R:← [LB+RB+RT]",
+   "variante": "A",
+   "motivo": "ambiguo:liquida-ou-coda",
+   "saiu": "cer"
+  },
+  {
+   "ts": "20:52:27.472",
+   "tipo": "palavra",
+   "palavra": "desmerecer",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:32.223",
+   "tipo": "silaba",
+   "gesto": "L:· R:→ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "o",
+   "palavra": "o"
+  },
+  {
+   "ts": "20:52:32.520",
+   "tipo": "palavra",
+   "palavra": "o",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:34.701",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:←↖↑↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "m",
+    "nucleo": "eu",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "meu",
+   "palavra": "meu"
+  },
+  {
+   "ts": "20:52:35.677",
+   "tipo": "palavra",
+   "palavra": "meu",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:39.585",
+   "tipo": "silaba",
+   "gesto": "L:↘ R:→ [LB+RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "pr",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "pro",
+   "palavra": "pro"
+  },
+  {
+   "ts": "20:52:42.920",
+   "tipo": "silaba",
+   "gesto": "L:↖↑↖ R:← [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "j",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "je",
+   "palavra": "proje"
+  },
+  {
+   "ts": "20:52:45.149",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:↖ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "t",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "ti",
+   "palavra": "projeti"
+  },
+  {
+   "ts": "20:52:48.566",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:→ [LB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "nh",
+    "nucleo": "o",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "nho",
+   "palavra": "projetinho"
+  },
+  {
+   "ts": "20:52:48.947",
+   "tipo": "palavra",
+   "palavra": "projetinho",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:50.402",
+   "tipo": "silaba",
+   "gesto": "L:· R:↓ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "a",
+   "palavra": "a"
+  },
+  {
+   "ts": "20:52:52.471",
+   "tipo": "silaba",
+   "gesto": "L:→ R:↖ [RT+R3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "i",
+    "nasal": true,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "ssim",
+   "palavra": "assim"
+  },
+  {
+   "ts": "20:52:52.872",
+   "tipo": "palavra",
+   "palavra": "assim",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:56.433",
+   "tipo": "silaba",
+   "gesto": "L:↗→ R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "c",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "que",
+   "palavra": "que"
+  },
+  {
+   "ts": "20:52:56.730",
+   "tipo": "palavra",
+   "palavra": "que",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:52:58.051",
+   "tipo": "silaba",
+   "gesto": "L:· R:←↖↑↗ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "eu",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "eu",
+   "palavra": "eu"
+  },
+  {
+   "ts": "20:52:58.350",
+   "tipo": "palavra",
+   "palavra": "eu",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:01.468",
+   "tipo": "silaba",
+   "gesto": "L:↓ R:↓ [RT+R3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "m",
+    "nucleo": "a",
+    "nasal": true,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "mã",
+   "palavra": "mã"
+  },
+  {
+   "ts": "20:53:08.640",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:↓ [LB+RB+RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "d",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "r",
+    "regrafia": false
+   },
+   "saiu": "ndar",
+   "palavra": "mandar"
+  },
+  {
+   "ts": "20:53:08.640",
+   "tipo": "ambiguo",
+   "gesto": "L:↑ R:↓ [LB+RB+RT+L3]",
+   "variante": "A",
+   "motivo": "ambiguo:liquida-ou-coda",
+   "saiu": "ndar"
+  },
+  {
+   "ts": "20:53:09.102",
+   "tipo": "palavra",
+   "palavra": "mandar",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:11.581",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:53:12.622",
+   "tipo": "silaba",
+   "gesto": "L:→ R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "s",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "sse",
+   "palavra": "esse"
+  },
+  {
+   "ts": "20:53:12.902",
+   "tipo": "palavra",
+   "palavra": "esse",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:18.145",
+   "tipo": "silaba",
+   "gesto": "L:↙ R:↖ [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "v",
+    "nucleo": "i",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "vi",
+   "palavra": "vi"
+  },
+  {
+   "ts": "20:53:20.008",
+   "tipo": "dpad",
+   "op": "acento→",
+   "vogal": "í",
+   "virou": "ví"
+  },
+  {
+   "ts": "20:53:23.962",
+   "tipo": "silaba",
+   "gesto": "L:↑ R:←↖↑↗→ [RT+L3]",
+   "variante": "A",
+   "partes": {
+    "ataque": "d",
+    "nucleo": "eu",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "deu",
+   "palavra": "vídeu"
+  },
+  {
+   "ts": "20:53:24.416",
+   "tipo": "palavra",
+   "palavra": "vídeu",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:27.720",
+   "tipo": "silaba",
+   "gesto": "L:↘ R:← [LB+RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "pr",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "pre",
+   "palavra": "pre"
+  },
+  {
+   "ts": "20:53:29.263",
+   "tipo": "apaga",
+   "alvo": "letra",
+   "quantos": 1,
+   "restou": " eu mandar esse vídeu pr"
+  },
+  {
+   "ts": "20:53:30.648",
+   "tipo": "silaba",
+   "gesto": "L:· R:↓ [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "a",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "a",
+   "palavra": "pra"
+  },
+  {
+   "ts": "20:53:30.947",
+   "tipo": "palavra",
+   "palavra": "pra",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:31.942",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:53:34.372",
+   "tipo": "palavra",
+   "palavra": "e",
+   "fim": "espaço"
+  },
+  {
+   "ts": "20:53:34.871",
+   "tipo": "silaba",
+   "gesto": "L:· R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "e",
+   "palavra": "e"
+  },
+  {
+   "ts": "20:53:35.567",
+   "tipo": "silaba",
+   "gesto": "L:← R:← [RT]",
+   "variante": "A",
+   "partes": {
+    "ataque": "l",
+    "nucleo": "e",
+    "nasal": false,
+    "coda": "",
+    "regrafia": false
+   },
+   "saiu": "le",
+   "palavra": "ele"
+  },
+  {
+   "ts": "20:53:36.584",
+   "tipo": "palavra",
+   "palavra": "ele",
+   "fim": "."
+  }
+ ]
+}

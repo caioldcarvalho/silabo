@@ -127,6 +127,34 @@ t('cebola  re-grafia segue valendo em C',
   P(C([2,1],'e'),S('b','o'),S('l','a')),                               'cebola');
 console.log('  C não usa L3 nem R3 em lugar nenhum');
 
+grupo('variante D: nada é compartilhado, então nada colide');
+// D: roll = líquida (e só); L3 sonoriza; R3 nasaliza; RB coda, LB/LT o tipo
+const D = (gates,v,{voiced=false,nasal=false,coda=''}={}) => {
+  M.setVar('D'); M.stick.L.gates = gates;
+  Object.assign(M.btn,{LB:coda==='r'?1:0, LT:coda==='l'?1:0, RB:coda?1:0,
+                       L3:voiced?1:0, R3:nasal?1:0});
+  const o = M.buildOnset();
+  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:M.buildCoda()};
+};
+// o buraco da C: coda -r com ataque s, que o roll não conseguia alcançar
+t('ser   s + coda-r  (C não fazia)', P(D([2],'e',{coda:'r'})),            'ser');
+// "faser" é o esperado: /z/ intervocálico grafa ⟨s⟩ por default e o d-pad ↓ inverte
+t('faser f+a · z+coda-r (⟨z⟩ vem do d-pad)', P(D([5],'a'),D([2],'e',{voiced:true,coda:'r'})), 'faser');
+t('var   f sonoro + coda-r',         P(D([5],'a',{voiced:true,coda:'r'})), 'var');
+t('tar',                              P(D([0],'a',{coda:'r'})),            'tar');
+t('das   t sonoro + coda-s',         P(D([0],'a',{voiced:true,coda:'s'})), 'das');
+t('sol   s + coda-l',                P(D([2],'o',{coda:'l'})),             'sol');
+// o que NENHUMA variante fazia: cluster no ataque E coda
+t('pres  cluster pr + coda-s',       P(D([3,2],'e',{coda:'s'})),           'pres');
+t('nhos  nh + coda-s',               P(D([4,2],'o',{voiced:true,coda:'s'})), 'nhos');
+// cluster + nasal: "gran·de". (Cluster+nasal+CODA é quase inexistente em PT
+// nativo; e "aNs" no fim de palavra grafa "ãs" — irmãs, maçãs — que é o comum,
+// então "trans" é caso marcado, não bug.)
+t('grande gr + nasal · d+e',         P(D([1,2],'a',{voiced:true,nasal:true}),S('d','e')), 'grande');
+t('pro   cluster sem coda',          P(D([3,2],'o')),                      'pro');
+t('cebola  re-grafia segue valendo', P(D([2,1],'e'),S('b','o'),S('l','a')), 'cebola');
+console.log('  D alcança as 280 formas do desenho — ao custo de L3 e R3');
+
 grupo('roll: só primeiro, último e inversões de sentido');
 t('ai  [4,5,6,7]', N([4,5,6,7]), 'ai');
 t('oi  [2,1,0,7]', N([2,1,0,7]), 'oi');

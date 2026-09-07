@@ -467,6 +467,72 @@ Continua sem evidência a favor ou contra.
 
 ---
 
+## 8. Terceira sessão (07/09, 20h50) — C testada e reprovada, e nasce a D
+
+Log em [`sessao-2026-09-07c.json`](sessao-2026-09-07c.json). O backspace que
+repete funcionou: **17 apagamentos contra 112** na sessão anterior.
+
+### C foi usada por 13 sílabas e quebrou numa palavra
+
+Escreveu "o lucas é guei e ele vai" sem tropeçar. Aí veio "comprovar":
+
+```
+20:51:46 [C] L:↙↓ R:↓↘ [LB+RB+RT] → 'vaus'   ← queria "var"
+20:51:51   ⇄ C → A
+20:51:55 [A] L:← R:· [RT+L3]      → 'r'      ← emendou o r sozinho
+```
+
+Em C a coda `-r` sai de rolar até `→`, **depois** de já ter marcado o ataque.
+Partindo de `↙`(f) isso é meia volta de polegar, e ele parou no meio. Pior:
+**o roll não pode terminar no gate onde começou**, então para o ataque `s`/`z`
+a coda `-r` é literalmente **impossível** — "ser", "fazer", "dizer", "será":
+**1,54% dos tokens**. C está reprovada.
+
+| ataque | setores até `→` (coda -r) |
+|---|---|
+| s/z | **impossível** |
+| c/g, p/b | 1 |
+| t/d, m/n | 2 |
+| f/v, x/j | 3 |
+| l/r | 4 — meia volta |
+
+### Variante D — proposta do Caio, e cobre tudo
+
+> *"o real problema dos outros é que usar o LB como modificador de CODA E de
+> ataque necessariamente vai virar conflito"*
+
+É literalmente o teorema. A saída é dar à líquida um endereço que **só** é dela:
+
+- **roll do esquerdo** = líquida, e nada mais
+- **L3** sonoriza · **R3** nasaliza
+- **RB** = coda, **LB/LT** qualificam o tipo — e só fazem isso
+
+Nenhum canal compartilhado, então nenhuma colisão possível:
+
+| variante | alcança (de 280) | usa L3/R3 |
+|---|---|---|
+| A | 166 | sim |
+| B | 102 | não |
+| C | 158 | não |
+| **D** | **280** | **sim** |
+
+D é a única que resolve o que **nenhuma** outra resolvia: `pres`, `nhos`,
+`grande` — cluster no ataque **e** coda na mesma sílaba.
+
+### O trade-off ficou aritmético, não estético
+
+Durante a sílaba existem: L-gate, L-roll, R-gate, R-roll, LB, LT, RB, RT. O RT
+é o commit; os gates e o R-roll são ataque, núcleo e ditongo. Sobram **L-roll,
+LB, LT, RB** para líquida, sonoro, nasal e coda-com-tipo — quatro canais para
+cinco funções. **Sem L3/R3 a conta não fecha**, e o que B e C fizeram foi
+escolher onde pagar a diferença.
+
+Ou seja: *ou* L3/R3, *ou* sílabas impossíveis. Não há terceira via com este
+conjunto de dedos — a menos que apareça um quinto, e aí a saída é de hardware
+(paddles traseiros, que o Xbox Elite tem quatro).
+
+---
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,

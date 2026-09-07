@@ -133,9 +133,18 @@ lugares.
 - **B** — roll dá a líquida, LB sonoriza, LT nasaliza. Mata L3/R3, mas LB e LT
   também qualificam a coda, então "tar", "das" e **todos os infinitivos** são
   impossíveis.
-- **C** — roll dá a líquida, `LB`/`LT` ficam dedicados a sonoro/nasal, e **com
-  RB o roll manda a líquida para a coda**. Uma regra, dois lugares. Empata com A
-  em cobertura (166 de 280 formas) **sem usar L3 nem R3**.
+- **C** — roll dá a líquida e, com RB, ela vira coda. Reprovada em teste: o roll
+  não pode terminar no gate em que começou, então coda `-r` com ataque `s`/`z`
+  ("ser", "fazer", "dizer") é **impossível**, e para ataques distantes custa meia
+  volta de polegar.
+- **D** — a líquida mora **só** no roll; `L3`/`R3` fazem sonoro e nasal; `RB` com
+  `LB`/`LT` faz a coda. **Nenhum canal é compartilhado, e por isso alcança as 280
+  formas** — inclusive `pres`, `nhos`, `grande`, que nenhuma outra alcança. Paga
+  com L3/R3.
+
+O trade-off é aritmético: durante a sílaba sobram quatro canais (roll esquerdo,
+LB, LT, RB) para cinco funções (líquida, sonoro, nasal, coda, tipo da coda).
+**Sem L3/R3 a conta não fecha** — B e C só escolhem onde pagar a diferença.
 
 ## A pergunta em aberto
 

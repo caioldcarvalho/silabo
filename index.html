@@ -125,6 +125,7 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
     <button id="vA" class="sel">A · modificador</button>
     <button id="vB">B · roll</button>
     <button id="vC">C · mista</button>
+    <button id="vD">D · sem conflito</button>
   </div>
 </header>
 
@@ -293,7 +294,7 @@ function buildOnset(){
   if(!gs.length) return {c:'',respell:false};
   const mk = landmarks(gs);
   let base = ONSET_BY_GATE[mk[0]];
-  const voiced = variant==='A' ? btn.L3 : btn.LB;
+  const voiced = (variant==='A'||variant==='D') ? btn.L3 : btn.LB;
   if(voiced) base = VOICED[base];
 
   // Rolling the onset to ↗ asks for the other spelling. The consonants that
@@ -304,7 +305,13 @@ function buildOnset(){
                   && mk[0]!==RESPELL_GATE && !!RESPELL[base];
 
   let liq = '', suprimido = null;
-  if(variant==='A'){
+  // D: the liquid lives on the roll and NOWHERE else, so LB/LT are free to
+  // qualify the coda and nothing is ever shared. That is the whole point —
+  // a modifier that means one thing in the onset and another in the coda
+  // eventually collides, no matter how the collision is arranged.
+  if(variant==='D'){
+    if(!respell) liq = rollLiquid();
+  } else if(variant==='A'){
     // with RB held, LB/LT mean coda type — the liquid has nowhere to go
     // NOTE: this is ambiguity, not loss. RB+LB is also the normal gesture for
     // coda -r, so flagging it as a conflict cried wolf on every infinitive —
@@ -345,12 +352,13 @@ function buildNucleus(){
     const n = NUCLEUS_BY_GATE[gs[i]];
     if(n && n!=='—') v += GLIDE[n];
   }
-  const nasal = variant==='A' ? !!btn.R3 : !!btn.LT;
+  const nasal = (variant==='A'||variant==='D') ? !!btn.R3 : !!btn.LT;
   return {v,nasal};
 }
 
 function buildCoda(){
   if(!btn.RB) return '';
+  if(variant==='D') return btn.LB ? 'r' : btn.LT ? 'l' : 's';
   // C: the roll composes the liquid, and RB says it lands on the coda. LB and
   // LT stay dedicated to voicing and nasality, which is what B threw away and
   // what made "tar", "das" and every infinitive impossible there.
@@ -549,7 +557,7 @@ const satCache = {l:'',r:''};
 function satellites(side){
   const S = stick[side==='l'?'L':'R'];
   const g = S.gates.length ? S.gates[0] : null;
-  const voiced = variant==='A' ? btn.L3 : btn.LB;
+  const voiced = (variant==='A'||variant==='D') ? btn.L3 : btn.LB;
   const nasal  = variant==='A' ? btn.R3 : btn.LT;
   const chave = [side,g,variant,voiced,nasal,btn.LB,btn.LT,btn.RB].join(',');
   if(chave===satCache[side]) return;
@@ -785,6 +793,28 @@ const BINDS = {
      ['A','espaço'],['A + RB','enter'],
      ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
      ['LB + LT + B','limpa o texto todo'],
+     ['X','ponto final'],['Y','interrogação']],
+  D:[['analógico esq.','ataque (8 direções)'],
+     ['roll do esq. →','+r   pr, gr, tr   ·   nr→nh'],
+     ['roll do esq. ←','+l   pl, cl, fl   ·   lr→lh'],
+     ['L3','sonoriza  t→d  s→z  c→g'],['R3','nasaliza  a→ã  o→õ'],
+     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
+     ['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
+     ['RT','confirma a sílaba'],
+     ['','a líquida SÓ mora no roll, então LB/LT nunca'],
+     ['','disputam com a coda — nada é compartilhado'],
+     ['','e por isso alcança as 280 formas do desenho'],
+     ['— grafia —',''],
+     ['roll do esq. até ↗','grafa com a letra de ↗'],
+     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
+     ['  j → ↗','g    gente, girafa'],
+     ['— d-pad (pós-correção) —',''],
+     ['→ / ←','cicla o acento da última vogal'],
+     ['↓','s ↔ z   faser → fazer'],
+     ['— fora da sílaba —',''],
+     ['A','espaço'],['A + RB','enter'],
+     ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
+     ['LB + LT + B','limpa o texto todo'],
      ['X','ponto final'],['Y','interrogação']]
 };
 function paintBinds(){
@@ -1009,10 +1039,11 @@ addEventListener('keyup',e=>{
 document.getElementById('vA').onclick=()=>setVariant('A');
 document.getElementById('vB').onclick=()=>setVariant('B');
 document.getElementById('vC').onclick=()=>setVariant('C');
+document.getElementById('vD').onclick=()=>setVariant('D');
 function setVariant(v){
   const antes = variant;      // ler ANTES de trocar: o log saía sempre "C → C"
   variant=v;
-  for(const k of ['A','B','C'])
+  for(const k of ['A','B','C','D'])
     document.getElementById('v'+k).classList.toggle('sel',v===k);
   // What was happening right before a switch is the real evidence of what the
   // variant could not do — the first log showed every switch was escaping
