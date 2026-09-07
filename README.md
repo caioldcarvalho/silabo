@@ -46,6 +46,8 @@ enxergá-lo. Sem controle, dá para testar pelo teclado:
 | `Enter` | fecha a palavra |
 | `Backspace` | apaga |
 | `Shift+.` / `Shift+/` | ponto final / interrogação |
+| setas `↑ → ←` | circunflexo, agudo, crase |
+| seta `↓` | alterna s ↔ z |
 
 No controle, fora da sílaba (analógicos em repouso): **A** = espaço, **A+RB** =
 enter, **B** = backspace (segurar apaga a palavra), **X** = ponto final,
@@ -77,19 +79,28 @@ ortografia comum:
       a
 ```
 
-**Grafia por cluster ilegal** — combinações que o português proíbe ficam vagas,
-e as vagas viram as grafias que faltavam. Sem botão novo, sem modo, sem
-dicionário:
+**Re-grafia: role o ataque até ↗.** O português não é fonêmico o bastante para
+a grafia ser função do fonema — "sela"/"cela" e "sinto"/"cinto" são homófonos,
+nenhuma regra decide. Então a escolha volta para o usuário, com **um fato motor
+só**: *o som do gate em que você começou, escrito com a letra que mora em ↗.*
 
-| gesto | grafia | exemplo |
+| gesto | sai | |
 |---|---|---|
-| `s` + `r` | **c** | cebola, cidade |
-| `s` + `l` | **ç** | ação, moço |
-| `j` + `r` | **g** | gente, girafa |
-| `z` + `l` | **s** | casa, mesa |
+| `s`(→) roll ↗ | **c** / **ç** | cebola, cidade · ação, moço |
+| `x`(↖) roll ↗ | **ch** | chave, chão — ch começa com o c de ↗ |
+| `j` roll ↗ | **g** | gente, girafa — ↗ sonorizado *é* g |
 
-Das 32 combinações ataque×líquida só 13 são clusters reais; ainda sobram 11
-buracos livres. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
+Não é uma tabela de pares: os três terminam no mesmo gate. E `s`, `x`, `j` são
+exatamente os ataques que **não admitem líquida** em português, então a re-grafia
+nunca colide com cluster. Roll para qualquer outro destino é ignorado — desleixo
+degrada para o gate simples, não vira erro.
+
+`c` vs `ç` **não é um segundo endereço**: ⟨ç⟩ nunca ocorre antes de e/i, então a
+vogal decide. Ver [`docs/ACHADOS.md`](docs/ACHADOS.md).
+
+**D-pad — pós-correção** sobre o que já está escrito: ↑ circunflexo · → agudo ·
+← crase · ↓ alterna `s`↔`z` na última sibilante intervocálica (casa ↔ caza,
+faser → fazer).
 
 **Coda** — `RB` = -s (plural) · `RB+LB` = -r (infinitivos) · `RB+LT` = -l.
 `LB` significa "r" e `LT` significa "l" em qualquer posição: uma regra, dois

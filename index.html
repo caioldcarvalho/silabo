@@ -151,11 +151,18 @@ const GLIDE = {i:'i',u:'u',e:'i',o:'u','é':'i','ó':'u',a:'a'};
 // DIGRAPH: the cluster stands for a DIFFERENT PHONEME (/ɲ/ /ʎ/ /ʀ/) → belongs
 // to the phoneme resolver, survives a change of language.
 const DIGRAPH = {'nr':'nh','lr':'lh','rr':'rr','mr':'nh'};
-// SPELLING: same consonant, other spelling. Portuguese is not phonemic enough
+// RESPELL: same consonant, other spelling. Portuguese is not phonemic enough
 // for the grapheme to be a function of the phoneme ("sela"/"cela" are
-// homophones), so the user picks it. Belongs to the ORTHOGRAPHER — a different
-// language replaces this table wholesale.
-const SPELLING = {'sr':'c','sl':'ç','jr':'g','zl':'s'};
+// homophones), so the user picks it — by rolling the left stick to ↗.
+// The rule is ONE motor fact, not a table of pairs: "the sound of the gate you
+// started on, written with the letter that lives at ↗" (c, or g when voiced).
+// Belongs to the ORTHOGRAPHER — another language replaces this wholesale.
+const RESPELL_GATE = 1;                       // ↗ — where c/g live
+const RESPELL = {
+  s: front => front ? 'c' : 'ç',              // cebola, cidade · ação, moço
+  x: () => 'ch',                              // ch starts with the c at ↗
+  j: () => 'g'                                // ↗ voiced IS g — doubly motivated
+};
 
 // ---------------------------------------------------------------- state
 let variant = 'A';
@@ -194,26 +201,32 @@ function track(side,x,y){
 // ---------------------------------------------------------------- assembly
 function buildOnset(){
   const gs = stick.L.gates;
-  if(!gs.length) return '';
-  let base = ONSET_BY_GATE[gs[0]];
+  if(!gs.length) return {c:'',respell:false};
+  const mk = landmarks(gs);
+  let base = ONSET_BY_GATE[mk[0]];
   const voiced = variant==='A' ? btn.L3 : btn.LB;
   if(voiced) base = VOICED[base];
+
+  // Rolling the onset to ↗ asks for the other spelling. The consonants that
+  // need one (s, x, j) are exactly the ones that take no liquid in Portuguese,
+  // so this can never collide with a cluster. Any other roll destination is
+  // ignored, so a sloppy roll still degrades to the plain gate.
+  const respell = mk.length>1 && mk[mk.length-1]===RESPELL_GATE
+                  && mk[0]!==RESPELL_GATE && !!RESPELL[base];
 
   let liq = '';
   if(variant==='A'){
     if(!btn.RB){ if(btn.LB) liq='r'; else if(btn.LT) liq='l'; }
-  } else {
+  } else if(!respell){
     // roll: second gate read on the liquid axis — ← is l, → is r
-    const mk = landmarks(gs);
     if(mk.length>1){
       const t = mk[mk.length-1];
       if(t===6) liq='l'; else if(t===2) liq='r';
     }
   }
-  if(!liq) return base;
+  if(!liq) return {c:base,respell};
   const pair = base+liq;
-  // SPELLING pairs are handed to the orthographer raw, on purpose
-  return DIGRAPH[pair] || pair;
+  return {c: DIGRAPH[pair] || pair, respell:false};
 }
 
 // A roll along the rim crosses every gate in between, and those are travel,
@@ -252,14 +265,14 @@ function current(){
   const o = buildOnset();
   const {v,nasal} = buildNucleus();
   const c = buildCoda();
-  return {onset:o,vowel:v,nasal,coda:c};
+  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:c};
 }
 
 // ---------------------------------------------------------------- orthography
 // operates on the whole word buffer, not on the syllable — this is what lets
 // segmentation be free (ca.mpo and cam.po must both produce "campo")
 function orthograph(prevWord, syl){
-  let {onset,vowel,nasal,coda} = syl;
+  let {onset,vowel,nasal,coda,respell} = syl;
   if(!onset && !vowel && !coda) return prevWord;
 
   const firstV = vowel[0] || '';
@@ -267,16 +280,20 @@ function orthograph(prevWord, syl){
   const lastCh = prevWord.slice(-1);
   const afterVowel = /[aeiouáéíóúâêôãõà]/i.test(lastCh);
 
-  // The user spelled it out via an illegal cluster — no automatic rule applies,
-  // that is the whole point of asking explicitly.
-  const spelled = SPELLING[onset];
-  if(spelled){ onset = spelled; }
+  // The user rolled to ↗ asking for the other spelling — no automatic rule
+  // applies, that is the whole point of asking explicitly. c vs ç is NOT a
+  // second address: ⟨ç⟩ never occurs before e/i, so the vowel decides it.
+  if(respell && RESPELL[onset]){ onset = RESPELL[onset](front); }
   else {
     // /k/ and /g/ need a mute u before front vowels
     if(onset==='c' && front) onset='qu';
     if(onset==='g' && front) onset='gu';
-    // intervocalic /s/ and /R/ double
+    // intervocalic /s/ doubles — a bare s between vowels already reads /z/
     if(onset==='s' && afterVowel) onset='ss';
+    // /z/ between vowels is written ⟨s⟩ in 1.86x more tokens than ⟨z⟩
+    // (casa, mesa, coisa, precisa). ⟨z⟩ is the marked case and costs the
+    // d-pad toggle — measured, see tools/corpus.mjs.
+    if(onset==='z' && afterVowel && vowel) onset='s';
     // NOT r → rr here: intervocalic /ɾ/ is written with a single r (girafa,
     // caro). The strong /ʀ/ has its own explicit cluster, r+r → rr.
   }
@@ -394,8 +411,12 @@ const BINDS = {
      ['R3','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
      ['RT','confirma a sílaba'],
      ['— grafia —',''],
-     ['s +r','c    cebola, cidade'],['s +l','ç    ação, moço'],
-     ['j +r','g    gente, girafa'],['z +l','s    casa, mesa'],
+     ['roll do esq. até ↗','grafa com a letra de ↗'],
+     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
+     ['  j → ↗','g    gente, girafa'],
+     ['— d-pad (pós-correção) —',''],
+     ['↑ / → / ←','ê ô â  ·  é ó á  ·  à'],
+     ['↓','s ↔ z   casa / faser→fazer'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
      ['X','ponto final'],['Y','interrogação']],
@@ -405,8 +426,12 @@ const BINDS = {
      ['LT','nasaliza  a→ã  o→õ'],['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
      ['RT','confirma a sílaba'],
      ['— grafia —',''],
-     ['s +r','c    cebola, cidade'],['s +l','ç    ação, moço'],
-     ['j +r','g    gente, girafa'],['z +l','s    casa, mesa'],
+     ['roll do esq. até ↗','grafa com a letra de ↗'],
+     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
+     ['  j → ↗','g    gente, girafa'],
+     ['— d-pad (pós-correção) —',''],
+     ['↑ / → / ←','ê ô â  ·  é ó á  ·  à'],
+     ['↓','s ↔ z   casa / faser→fazer'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
      ['X','ponto final'],['Y','interrogação']]
@@ -424,7 +449,57 @@ function atRest(){ return stick.L.live===null && stick.R.live===null; }
 
 function endWord(suffix){ text += finish(word)+suffix; word=''; }
 
+// D-pad = post-correction on what is already written. Accents live here because
+// they are lexical and cannot be derived; the ↓ slot used to be cedilla and is
+// free now that c/ç is a rule — so it absorbs exactly the residue that rule
+// created: the marked ⟨z⟩.
+const ACUTE = {a:'á',e:'é',i:'í',o:'ó',u:'ú'};
+const CIRC  = {a:'â',e:'ê',i:'î',o:'ô',u:'û'};
+const GRAVE = {a:'à'};
+const dpadPrev = {up:0,down:0,left:0,right:0};
+
+function editBuffer(fn){
+  const emWord = word.length>0;
+  const w = fn(emWord ? word : text);
+  if(w===null) return;
+  if(emWord) word = w; else text = w;
+}
+
+function accentLast(map){
+  editBuffer(w => {
+    for(let i=w.length-1;i>=0;i--){
+      const ch = w[i].toLowerCase();
+      if(map[ch]) return w.slice(0,i)+map[ch]+w.slice(i+1);
+    }
+    return null;
+  });
+}
+
+// flips the last INTERVOCALIC single sibilant: casa ↔ caza, faser ↔ fazer.
+// Deliberately blind to "ss", which is a different phoneme, not a spelling.
+function toggleSibilant(){
+  editBuffer(w => {
+    const V='aeiouáéíóúâêôãõà';
+    const re = new RegExp(`[${V}]([sz])(?=[${V}])`,'gi');
+    const hits = [...w.matchAll(re)];
+    if(!hits.length) return null;
+    const i = hits[hits.length-1].index + 1;
+    return w.slice(0,i) + (w[i].toLowerCase()==='s'?'z':'s') + w.slice(i+1);
+  });
+}
+
+function dpad(now){
+  if(!atRest()) { Object.assign(dpadPrev, now); return; }
+  if(now.up    && !dpadPrev.up)    accentLast(CIRC);
+  if(now.right && !dpadPrev.right) accentLast(ACUTE);
+  if(now.left  && !dpadPrev.left)  accentLast(GRAVE);
+  if(now.down  && !dpadPrev.down)  toggleSibilant();
+  Object.assign(dpadPrev, now);
+}
+
 function faceButtons(pad){
+  dpad({up:    pad.buttons[12]?.pressed?1:0, down: pad.buttons[13]?.pressed?1:0,
+        left:  pad.buttons[14]?.pressed?1:0, right:pad.buttons[15]?.pressed?1:0});
   const now = {A:pad.buttons[0]?.pressed?1:0, B:pad.buttons[1]?.pressed?1:0,
                X:pad.buttons[2]?.pressed?1:0, Y:pad.buttons[3]?.pressed?1:0};
   if(atRest()){
@@ -493,6 +568,10 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
   if(e.code==='Enter'){ text+=finish(word)+' '; word=''; }
   if(e.code==='Backspace'){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); e.preventDefault(); }
+  if(e.code==='ArrowUp'){    accentLast(CIRC);  e.preventDefault(); }
+  if(e.code==='ArrowRight'){ accentLast(ACUTE); e.preventDefault(); }
+  if(e.code==='ArrowLeft'){  accentLast(GRAVE); e.preventDefault(); }
+  if(e.code==='ArrowDown'){  toggleSibilant();  e.preventDefault(); }
   if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; }
   if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; }
 });

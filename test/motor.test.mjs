@@ -10,10 +10,18 @@ const html = readFileSync(join(raiz,'index.html'),'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const puro = js.split('// ---------------------------------------------------------------- wheels')[0];
 const M = new Function('performance','document', puro +
-  'return {orthograph, finish, landmarks, NUCLEUS_BY_GATE, GLIDE};'
+  `return {orthograph, finish, landmarks, NUCLEUS_BY_GATE, GLIDE,
+           buildOnset, stick, btn, setVar: v => { variant = v; }};`
 )({now:()=>0},{getElementById:()=>({})});
 
-const S = (o,v,n=false,c='') => ({onset:o, vowel:v, nasal:n, coda:c});
+const S = (o,v,n=false,c='',respell=false) => ({onset:o, vowel:v, nasal:n, coda:c, respell});
+// R(...) = a syllable whose onset came from an actual left-stick roll
+const R = (gates,v,{voiced=false,n=false,c=''}={}) => {
+  M.setVar('A'); M.stick.L.gates = gates;
+  Object.assign(M.btn,{LB:0,LT:0,RB:0,L3:voiced?1:0,R3:0});
+  const o = M.buildOnset();
+  return {onset:o.c, respell:o.respell, vowel:v, nasal:n, coda:c};
+};
 const P = (...sils) => { let w=''; for(const s of sils) w = M.orthograph(w,s); return M.finish(w); };
 const N = gs => { const mk=M.landmarks(gs); let v=M.NUCLEUS_BY_GATE[mk[0]];
   for(let i=1;i<mk.length;i++){const n=M.NUCLEUS_BY_GATE[mk[i]]; if(n&&n!=='—') v+=M.GLIDE[n];} return v; };
@@ -42,17 +50,35 @@ t('não',     P(S('n','au',true)),                     'não');
 t('pão',     P(S('p','au',true)),                     'pão');
 t('mãe',     P(S('m','ai',true)),                     'mãe');
 t('põe',     P(S('p','oi',true)),                     'põe');
-t('ações',   P(S('','a'),S('sl','oi',true,'s')),      'ações');
+t('ações',   P(S('','a'),R([2,1],'oi',{n:true,c:'s'})), 'ações');
 
-grupo('grafia por cluster fonotaticamente ilegal');
-t('cebola',  P(S('sr','e'),S('b','o'),S('l','a')),    'cebola');
-t('cidade',  P(S('sr','i'),S('d','a'),S('d','e')),    'cidade');
-t('caçar',   P(S('c','a'),S('sl','a',false,'r')),     'caçar');
-t('moço',    P(S('m','o'),S('sl','o')),               'moço');
-t('gente',   P(S('jr','e',true),S('t','e')),          'gente');
-t('girafa',  P(S('jr','i'),S('r','a'),S('f','a')),    'girafa');
-t('casa',    P(S('c','a'),S('zl','a')),               'casa');
-t('mesa',    P(S('m','e'),S('zl','a')),               'mesa');
+grupo('re-grafia: roll do analógico esquerdo até ↗');
+// s vive em → (gate 2), x em ↖ (7), c/g em ↗ (1)
+t('cebola  [s→↗]+e',   P(R([2,1],'e'),S('b','o'),S('l','a')),        'cebola');
+t('cidade  [s→↗]+i',   P(R([2,1],'i'),S('d','a'),S('d','e')),        'cidade');
+t('começar co·me·çar', P(S('c','o'),S('m','e'),R([2,1],'a',{c:'r'})), 'começar');
+t('ação    [s→↗]+ão',  P(S('','a'),R([2,1],'au',{n:true})),          'ação');
+t('moço    [s→↗]+o',   P(S('m','o'),R([2,1],'o')),                   'moço');
+t('caçar   [s→↗]+a-r', P(S('c','a'),R([2,1],'a',{c:'r'})),           'caçar');
+t('chave   [x→↗]+a',   P(R([7,0,1],'a'),S('v','e')),                 'chave');
+t('chão    [x→↗]+ão',  P(R([7,0,1],'au',{n:true})),                  'chão');
+t('gente   [j→↗]+ẽ',   P(R([7,0,1],'e',{voiced:true,n:true}),S('t','e')), 'gente');
+t('girafa  [j→↗]+i',   P(R([7,0,1],'i',{voiced:true}),S('r','a'),S('f','a')), 'girafa');
+console.log('  c vs ç é REGRA (vogal seguinte), não um segundo endereço');
+
+grupo('/z/ intervocálico: ⟨s⟩ é o default, ⟨z⟩ é o caso marcado');
+t('casa',    P(S('c','a'),S('z','a')),                'casa');
+t('mesa',    P(S('m','e'),S('z','a')),                'mesa');
+t('coisa',   P(S('c','oi'),S('z','a')),               'coisa');
+t('zero  (início: não é intervocálico)', P(S('z','e'),S('r','o')), 'zero');
+t('faser → d-pad ↓ → fazer', (()=>{ let w=''; for(const x of [S('f','a'),S('z','e'),S('r','')]) w=M.orthograph(w,x);
+   const V='aeiouáéíóúâêôãõà'; const hits=[...w.matchAll(new RegExp(`[${V}]([sz])(?=[${V}])`,'gi'))];
+   const i=hits[hits.length-1].index+1; return M.finish(w.slice(0,i)+'z'+w.slice(i+1)); })(), 'fazer');
+
+grupo('roll acidental degrada para o gate simples');
+t('só ↗ não re-grafa (c)',  P(R([1],'a')),        'ca');
+t('roll s→← é ignorado',    P(R([2,6],'a')),      'sa');
+t('roll s→↗ re-grafa',      P(R([2,1],'a')),      'ça');
 
 grupo('regras automáticas não podem regredir');
 t('que',      P(S('c','e')),                          'que');

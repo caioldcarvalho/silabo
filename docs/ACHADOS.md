@@ -113,7 +113,28 @@ implementar.
 
 ---
 
-## 3. Gap ortográfico: `ce` e `ci` — RESOLVIDO
+## 3. Gap ortográfico: `ce` e `ci` — RESOLVIDO (em duas rodadas)
+
+> **Rodada 2 (07/09, implementada).** O autor objetou contra a própria solução:
+> *"começa a entrar um pouco no problema da estenografia. É uma decisão
+> arbitrária."* Um parecer externo reenquadrou: a analogia com estenografia não
+> procede — a arbitrariedade é **do português**, não do desenho; o usuário já
+> sabe que "cebola" tem c, e o desenho só dá endereço a uma decisão que a língua
+> já tomou. Mas o incômodo apontava um defeito real e **outro**: um operador
+> composicional (`ataque+líquida`) estava produzindo resultado não-composicional.
+>
+> **O que ficou no lugar: roll do analógico esquerdo até ↗.** *O som do gate em
+> que você começou, escrito com a letra que mora em ↗.* Um fato motor, não
+> quatro pares: `s`→↗ = c/ç, `x`→↗ = ch, `j`→↗ = g (e ↗ sonorizado **é** g, o
+> que torna o terceiro duplamente motivado). Os ataques que precisam de
+> re-grafia são exatamente os que não admitem líquida, então nunca colide com
+> cluster; roll para outro destino é ignorado e degrada para o gate simples.
+>
+> Isso matou dois dos quatro endereços originais: `ç` virou regra (a vogal
+> decide) e `z` virou default invertido + pós-correção no d-pad. O texto abaixo
+> fica como o raciocínio que levou até aqui.
+
+### O caminho até ela
 
 **Ideia do Caio, e é melhor que a alternativa que eu tinha proposto** (um
 ciclador de grafia no d-pad). O ciclador é pós-correção: digita errado e
@@ -269,11 +290,22 @@ precisam de novo endereço.
 - `r` intervocálico simples; `é`/`ó` normalizados
 - botões de face: A espaço, A+RB enter, B backspace, X ponto, Y interrogação
 
+**Feito na rodada 2:**
+- re-grafia por roll até ↗ (substitui os 4 clusters arbitrários)
+- `c`/`ç` por regra da vogal seguinte
+- ⟨s⟩ como default de /z/ intervocálico, medido contra corpus
+- d-pad ligado: ↑ ê ô â · → é ó á · ← à · ↓ alterna s↔z
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
-2. D-pad: acentos e o resto da pontuação.
+2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
+   porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
+   provado como canal viável; a pergunta é se a líquida deve migrar para ele, e
+   com o que qualificar a coda depois disso.
 3. Onde vão maiúscula e o modo letra-a-letra, que eram X e Y.
 4. Labialização no ataque (`qu`/`gu` + ditongo → Uruguai, quais).
-5. Como pagar menos caro pelo L3/R3 — 7 funções em 3 botões.
-6. Reaproveitar os slots livres restantes: `x`/`ch`, `h`, `k`, `w`, `y`, e
-   possivelmente os dois gates de núcleo sem distinção ortográfica.
+5. Resto da pontuação (vírgula, dois-pontos, aspas).
+6. Antes de gastar qualquer slot novo, a peneira: **é derivável por regra? → é
+   alógrafo de algo que já tem endereço? → tem endereço natural na roda?** Slot
+   livre é passivo, não ativo: endereço barato faz gastar tabela onde uma regra
+   sairia de graça. Foi assim que nasceram o `ç` e o `z` que acabaram de morrer.
