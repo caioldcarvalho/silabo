@@ -43,10 +43,22 @@ t('só   (gate ó, literal)', P(S('s','ó')),             'só');
 t('é    (gate é, literal)', P(S('','é')),              'é');
 t('também tam·bém (as duas nasais)', P(S('t','a',true),S('b','é',true)), 'também');
 t('tempo',   P(S('t','e',true),S('p','o')),           'tempo');
-t('irmã',    P(S('','i',false,'r'),S('m','a',true)),  'irmã');
+// o gesto sozinho dá "irmam"; o til é pós-correção no d-pad (ver ui.test.mjs)
+t('irmam (til vem do ciclo)', P(S('','i',false,'r'),S('m','a',true)), 'irmam');
 t('irmãs',   P(S('','i',false,'r'),S('m','a',true,'s')), 'irmãs');
 t('sons',    P(S('s','o',true,'s')),                  'sons');
 t('bens',    P(S('b','e',true,'s')),                  'bens');
+
+grupo('/aN/ em fim de palavra é -am, e o til vem do ciclo');
+// -am = 0,671% dos tokens (toda 3a pessoa do plural) contra 0,119% de -ã.
+// O raro vira pós-correção; é a mesma doutrina de sempre.
+t('falam',   P(S('f','a'),S('l','a',true)),                  'falam');
+t('foram',   P(S('f','o'),S('r','a',true)),                  'foram');
+t('eram',    P(S('','e'),S('r','a',true)),                   'eram');
+t('tinham',  P(S('t','i'),S('nh','a',true)),                 'tinham');
+t('estavam', P(S('','e',false,'s'),S('t','a'),S('v','a',true)), 'estavam');
+// antes do -s do plural continua sendo til: "ams" não existe, "ãs" existe
+t('irmãs',   P(S('','i',false,'r'),S('m','a',true,'s')),     'irmãs');
 
 grupo('ditongos nasais');
 t('não',     P(S('n','au',true)),                     'não');

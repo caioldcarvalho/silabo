@@ -432,9 +432,13 @@ function finish(w){
     // /N/ before p or b → m
     .replace(/([ãõ])N/g,'$1')          // tilde typed by hand on an already nasal vowel
     .replace(/N(?=[pb])/g,'m')
-    // tilde only on ã, and only word-finally or before the plural -s
-    // (lã, irmã, irmãs) — never before a consonant: "campo", not "cãpo"
-    .replace(/aN(?=s?$)/g,'ã')
+    // Word-final /aN/ is "am", not "ã": every third-person plural ends there
+    // (falam, foram, eram, tinham) — 0,671% of tokens against 0,119% for "ã",
+    // measured. The tilde is reachable from the accent cycle, and the rule
+    // above absorbs the /N/ when it lands, so "irmam" → cycle → "irmã".
+    // Before the plural -s it IS the tilde, because "ams" does not exist and
+    // "ãs" does (irmãs, maçãs, manhãs).
+    .replace(/aN(?=s$)/g,'ã')
     // before any other letter it is a plain n (canta, sons, bens)
     .replace(/N(?=[a-zà-ú])/gi,'n')
     // word-finally it is m (sem, bem, um, com, bom)

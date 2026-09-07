@@ -21,7 +21,7 @@ const M = new Function('performance','document','addEventListener','navigator',
   corpo + `return {satellites, renderHud, stick, btn, setVar:v=>{variant=v}, held, flash,
                    commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
                    setWord:w=>{word=w}, getWord:()=>word,
-                   setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest};`
+                   setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest, finish};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
   {getItem:k=>store[k]??null, setItem:(k,v)=>{store[k]=v}, removeItem:k=>{delete store[k]}},
   fn=>fn(), function(){}, {createObjectURL:()=>'', revokeObjectURL(){}});
@@ -102,6 +102,11 @@ t('← desfaz o →',         (()=>{M.setWord('cafe');M.cycleAccent(1);M.cycleAc
 t('NÃO pula pra vogal anterior', ciclo('cafe',2), ['cafê']);
 console.log('  ↑ era o bug: 2 toques acentuavam o "a" em vez de reverter o "e"');
 t('só: o tem 4 estados',  ciclo('so',1),    ['só']);
+// o ciclo alcança o til, e o finish absorve o arquifonema nasal junto
+t('irmam + 3 toques → irmã',
+  (()=>{M.setWord('irmaN'); for(let i=0;i<3;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmã']);
+t('e volta: mais 2 toques → irmam',
+  (()=>{M.setWord('irmaN'); for(let i=0;i<5;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmam']);
 t('s↔z continua',         (()=>{M.setWord('faser');M.toggleSibilant();return M.getWord();})(), ['fazer']);
 
 console.log('\n— backspace repete, e LB+LT+B limpa tudo —');

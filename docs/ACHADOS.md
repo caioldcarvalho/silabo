@@ -533,6 +533,49 @@ conjunto de dedos — a menos que apareça um quinto, e aí a saída é de hardw
 
 ---
 
+## 9. O til é pós-correção, não default — e isso corrigiu um bug grande
+
+Ideia do Caio, a partir do caso `ãs`/`ans`:
+
+> *"o ~ vira um acento possível e a grafia padrão sempre cai pra ans. quem quiser
+> ãs acentua como se fosse um acento qualquer. faz menos sentido e sai um pouco
+> da lógica que construímos, mas resolve."*
+
+**Não sai da lógica — é ela aplicada.** A doutrina do projeto é *frequente e
+derivável → regra; frequente e lexical → endereço no gesto; **raro e lexical →
+pós-correção***. E a medição mostra de que lado cada um cai:
+
+| fim de palavra | tokens | formas |
+|---|---|---|
+| **-am** | **0,671%** | 1508 — foram, estavam, eram, precisam, tinham |
+| -ã | 0,119% | 64 — amanhã, manhã, irmã, fã, maçã |
+| -ãs | 0,009% | 19 — irmãs, maçãs, manhãs |
+| -ans | 0,005% | 23 — quase tudo estrangeiro (jeans, trans) |
+
+O caso não era "trans": era que **toda terceira pessoa do plural estava
+quebrada**. `falam` saía "falã", `foram` saía "forã", `eram` saía "erã",
+`tinham` saía "tinhã" — 5,6× mais frequente que o caso que a regra protegia.
+
+**A correção não precisou de mecanismo novo.** O til já estava no ciclo de
+acento (`a á â ã à`), e o `finish` já absorvia o arquifonema quando o til caía
+em cima dele. Bastou inverter o default:
+
+- `/aN/` em fim de palavra → **"am"**
+- antes do `-s` do plural continua **"ãs"**, porque "ams" não existe
+- `irmam` + 3 toques do ciclo → **irmã**, e mais 2 voltam para `irmam`
+
+### Sobre o ciclador universal
+
+A outra ideia — *"algum dos d-buttons poderia ciclar todos os casos
+ambíguos"* — eu não faria. Um ciclador só funciona quando tem **domínio e
+alfabeto definidos**: o de acento é "última vogal" × "os acentos que ela
+aceita"; o de sibilante é "última sibilante intervocálica" × "s/z". Um
+universal teria que **adivinhar o alvo**, e vira imprevisível — exatamente o
+oposto do que faz os outros dois funcionarem. O d-pad tem quatro direções, três
+em uso; se aparecer um terceiro caso lexical frequente, ele ganha o `↑`.
+
+---
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,

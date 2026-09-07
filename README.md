@@ -112,7 +112,9 @@ acentuava aquela. `↓` alterna `s`↔`z` na última sibilante intervocálica
 (faser → fazer). `↑` está livre.
 
 `é` e `ó` têm gate próprio e saem acentuados como o rótulo promete — o d-pad
-cobre o resto. Medido: **10,7% dos tokens** carregam vogal acentuada, caro
+cobre o resto, **inclusive o til**: `/aN/` em fim de palavra grafa `am` por
+default (falam, foram, eram — 0,671% dos tokens contra 0,119% de `-ã`), e quem
+quer `irmã` cicla o acento a partir de `irmam`. Medido: **10,7% dos tokens** carregam vogal acentuada, caro
 demais para ser tudo pós-correção.
 
 **Telemetria.** A sessão é registrada: cada sílaba com o gesto que a produziu, as
