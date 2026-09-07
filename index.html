@@ -114,6 +114,7 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
   <div class="variants">
     <button id="vA" class="sel">A · modificador</button>
     <button id="vB">B · roll</button>
+    <button id="vC">C · mista</button>
   </div>
 </header>
 
@@ -215,6 +216,20 @@ const stick = {
   L:{gates:[],live:null},
   R:{gates:[],live:null}
 };
+
+// Sticks do not rest at zero. Measured on a real xinput pad: the left one sat
+// at x=-0.164, which never flips a gate but eats up to 44% of the angular
+// margin — and worse, at a partial 0.7 push on a diagonal the effective radius
+// lands at 0.54, just under the 0.55 entry threshold, so the gate never fires.
+// So we learn the resting point continuously, from samples that are clearly
+// at rest, and subtract it.
+const zero = {L:[0,0], R:[0,0]};
+function calibrate(side, x, y){
+  if(Math.hypot(x,y) > 0.25) return;            // not at rest, ignore
+  const z = zero[side];
+  z[0] += (x - z[0]) * 0.02;                    // slow, so a real push cannot drag it
+  z[1] += (y - z[1]) * 0.02;
+}
 const btn = {LB:0,LT:0,RB:0,RT:0,L3:0,R3:0};
 const prev = {RT:0};
 
@@ -249,6 +264,15 @@ function track(side,x,y){
 }
 
 // ---------------------------------------------------------------- assembly
+// The liquid the left roll is asking for, if any. ← is l, → is r — same axis
+// in every variant that reads the roll at all.
+function rollLiquid(){
+  const mk = landmarks(stick.L.gates);
+  if(mk.length<2) return '';
+  const t = mk[mk.length-1];
+  return t===6 ? 'l' : t===2 ? 'r' : '';
+}
+
 function buildOnset(){
   const gs = stick.L.gates;
   if(!gs.length) return {c:'',respell:false};
@@ -266,16 +290,16 @@ function buildOnset(){
 
   let liq = '', suprimido = null;
   if(variant==='A'){
-    // the conflict the design already knows about: with RB held, LB/LT mean
-    // coda type, so the liquid silently disappears. Recorded, not hidden.
-    if(btn.RB && (btn.LB||btn.LT)) suprimido = 'liquida-comida-pela-coda';
+    // with RB held, LB/LT mean coda type — the liquid has nowhere to go
+    // NOTE: this is ambiguity, not loss. RB+LB is also the normal gesture for
+    // coda -r, so flagging it as a conflict cried wolf on every infinitive —
+    // the first real log had 2 "conflicts" and both were correct typing.
+    if(btn.RB && (btn.LB||btn.LT)) suprimido = 'ambiguo:liquida-ou-coda';
     else if(btn.LB) liq='r'; else if(btn.LT) liq='l';
   } else if(!respell){
-    // roll: second gate read on the liquid axis — ← is l, → is r
-    if(mk.length>1){
-      const t = mk[mk.length-1];
-      if(t===6) liq='l'; else if(t===2) liq='r';
-    }
+    // B and C both read the liquid off the roll. In C, holding RB sends it to
+    // the CODA instead of the onset — one rule, two places, no extra finger.
+    if(!(variant==='C' && btn.RB)) liq = rollLiquid();
   }
   if(!liq) return {c:base,respell,suprimido};
   const pair = base+liq;
@@ -312,6 +336,10 @@ function buildNucleus(){
 
 function buildCoda(){
   if(!btn.RB) return '';
+  // C: the roll composes the liquid, and RB says it lands on the coda. LB and
+  // LT stay dedicated to voicing and nasality, which is what B threw away and
+  // what made "tar", "das" and every infinitive impossible there.
+  if(variant==='C') return rollLiquid() || 's';
   if(btn.LB) return 'r';
   if(btn.LT) return 'l';
   return 's';
@@ -407,8 +435,12 @@ function commit(){
     partes:{ataque:syl.onset||'', nucleo:syl.vowel||'', nasal:!!syl.nasal,
             coda:syl.coda||'', regrafia:!!syl.respell},
     saiu: finish(word).slice(finish(before).length), palavra: finish(word)});
-  if(syl.suprimido) tlog('CONFLITO', {gesto:gesto(), variante:variant,
-    motivo:syl.suprimido, saiu:finish(word).slice(finish(before).length)});
+  if(syl.suprimido){
+    // Only a silent LOSS is a conflict. Ambiguity is logged, not alarmed.
+    const perda = !syl.suprimido.startsWith('ambiguo:');
+    tlog(perda ? 'CONFLITO' : 'ambiguo', {gesto:gesto(), variante:variant,
+      motivo:syl.suprimido, saiu:finish(word).slice(finish(before).length)});
+  }
   render();
 }
 
@@ -709,6 +741,25 @@ const BINDS = {
      ['↓','s ↔ z   faser → fazer'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
+     ['X','ponto final'],['Y','interrogação']],
+  C:[['analógico esq.','ataque (8 direções)'],
+     ['roll do esq. →','+r   pr, gr   ·   nr→nh'],['roll do esq. ←','+l   pl, cl, fl'],
+     ['LB','sonoriza  t→d  s→z  c→g'],['LT','nasaliza  a→ã  o→õ'],
+     ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
+     ['RB','coda -s'],
+     ['RB + roll do esq. →','coda -r   (todos os infinitivos)'],
+     ['RB + roll do esq. ←','coda -l'],
+     ['RT','confirma a sílaba'],
+     ['','sem L3 nem R3 em lugar nenhum'],
+     ['— grafia —',''],
+     ['roll do esq. até ↗','grafa com a letra de ↗'],
+     ['  s → ↗','c / ç   cebola, ação'],['  x → ↗','ch   chave, chão'],
+     ['  j → ↗','g    gente, girafa'],
+     ['— d-pad (pós-correção) —',''],
+     ['→ / ←','cicla o acento da última vogal'],
+     ['↓','s ↔ z   faser → fazer'],
+     ['— fora da sílaba —',''],
+     ['A','espaço'],['A + RB','enter'],['B','backspace (segurar: apaga palavra)'],
      ['X','ponto final'],['Y','interrogação']]
 };
 function paintBinds(){
@@ -856,6 +907,9 @@ function poll(){
     btn.L3=kbBtn.L3; btn.R3=kbBtn.R3;
   }
 
+  calibrate('L',lx,ly); calibrate('R',rx,ry);
+  lx -= zero.L[0]; ly -= zero.L[1];
+  rx -= zero.R[0]; ry -= zero.R[1];
   track('L',lx,ly); track('R',rx,ry);
   axesNow.L = [Math.max(-1,Math.min(1,lx)), Math.max(-1,Math.min(1,ly))];
   axesNow.R = [Math.max(-1,Math.min(1,rx)), Math.max(-1,Math.min(1,ry))];
@@ -901,11 +955,18 @@ addEventListener('keyup',e=>{
 // ---------------------------------------------------------------- boot
 document.getElementById('vA').onclick=()=>setVariant('A');
 document.getElementById('vB').onclick=()=>setVariant('B');
+document.getElementById('vC').onclick=()=>setVariant('C');
 function setVariant(v){
   variant=v;
-  document.getElementById('vA').classList.toggle('sel',v==='A');
-  document.getElementById('vB').classList.toggle('sel',v==='B');
-  tlog('variante', {para:v});
+  for(const k of ['A','B','C'])
+    document.getElementById('v'+k).classList.toggle('sel',v===k);
+  // What was happening right before a switch is the real evidence of what the
+  // variant could not do — the first log showed every switch was escaping
+  // either L3 or a broken coda.
+  const recentes = tele.eventos.slice(-8)
+    .filter(e=>['silaba','apaga','ambiguo','CONFLITO'].includes(e.tipo))
+    .map(e=>e.tipo==='silaba' ? `${e.gesto}→${e.saiu}` : `${e.tipo}:${e.motivo||e.alvo||''}`);
+  tlog('variante', {de:variant, para:v, antesDisso:recentes});
   paintBinds(); resetMetrics();
 }
 document.getElementById('rs').onclick=resetMetrics;

@@ -126,6 +126,17 @@ a recarga; nada sai da máquina.
 `LB` significa "r" e `LT` significa "l" em qualquer posição: uma regra, dois
 lugares.
 
+## As três variantes
+
+- **A** — L3 sonoriza, R3 nasaliza, LB/LT dão a líquida. Cobre bem, mas usa os
+  cliques de analógico, e com RB segurado a líquida não tem para onde ir.
+- **B** — roll dá a líquida, LB sonoriza, LT nasaliza. Mata L3/R3, mas LB e LT
+  também qualificam a coda, então "tar", "das" e **todos os infinitivos** são
+  impossíveis.
+- **C** — roll dá a líquida, `LB`/`LT` ficam dedicados a sonoro/nasal, e **com
+  RB o roll manda a líquida para a coda**. Uma regra, dois lugares. Empata com A
+  em cobertura (166 de 280 formas) **sem usar L3 nem R3**.
+
 ## A pergunta em aberto
 
 **Como o ataque compõe com a líquida?** As duas variantes estão implementadas

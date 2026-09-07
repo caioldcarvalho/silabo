@@ -112,11 +112,24 @@ M.commit();
 t('sílaba boa vira 1 evento', tipos(), ['silaba']);
 t('registra o que saiu', JSON.stringify(M.tele.eventos.at(-1).saiu), ['pa']);
 
+// RB+LB é AMBÍGUO, não perda: é também o gesto normal de coda -r. O primeiro
+// log real teve 2 "conflitos" e os dois eram digitação correta de infinitivo.
 M.tele.eventos.length = 0;
-Object.assign(M.btn,{LB:1,RB:1});                              // pr + coda: conflito
+M.setVar('A'); M.stick.L.gates=[3]; M.stick.R.gates=[4];
+Object.assign(M.btn,{LB:1,LT:0,RB:1,RT:0,L3:0,R3:0});
 M.commit();
-t('conflito é detectado sozinho', tipos(), ['silaba','CONFLITO']);
-t('e diz o motivo', M.tele.eventos.find(e=>e.tipo==='CONFLITO').motivo, ['liquida-comida-pela-coda']);
+t('coda -r não grita conflito', tipos(), ['silaba','ambiguo']);
+t('não conta como CONFLITO',
+  tipos().includes('CONFLITO') ? 'GRITOU LOBO' : 'silencioso', ['silencioso']);
+
+// perda REAL e silenciosa: a líquida some porque o cluster não existe
+M.tele.eventos.length = 0;
+M.stick.L.gates=[2];                                           // → = s, e "sr" não existe
+Object.assign(M.btn,{LB:1,LT:0,RB:0,RT:0,L3:0,R3:0});
+M.commit();
+t('cluster inexistente É conflito', tipos(), ['silaba','CONFLITO']);
+t('e diz o motivo',
+  M.tele.eventos.find(e=>e.tipo==='CONFLITO').motivo, ['cluster-inexistente:sr']);
 
 M.tele.eventos.length = 0;
 M.stick.L.gates=[]; M.stick.R.gates=[];

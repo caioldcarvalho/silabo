@@ -352,6 +352,79 @@ toque pulava para a vogal **anterior** e acentuava aquela. Não havia volta.
 Agora `→` avança e `←` retrocede num ciclo fechado por vogal
 (`a á â ã à` · `e é ê` · `o ó ô õ`), reversível por construção. Sobrou o `↑`.
 
+---
+
+## 6. A primeira sessão medida (07/09) — e a variante C que ela pediu
+
+Log cru em [`sessao-2026-09-07.json`](sessao-2026-09-07.json): 42 sílabas, 18
+palavras, 5 apagamentos, **3 trocas de variante no meio da digitação**.
+
+### As trocas têm um padrão, e ele é o diagnóstico
+
+| momento | trocou para | o que tinha acabado de acontecer |
+|---|---|---|
+| 19:08:59 | **B** | usou `L3` para sonorizar `p→b` em "boiola" |
+| 19:10:17 | **A** | ia digitar "des·mer·e·cer" — três codas `-r`/`-s` |
+| 19:11:11 | **B** | ia digitar "pro·je·ti·nho", "ul·tra" — clusters |
+
+Ou seja: **foge para B para não usar L3; volta para A porque em B a coda
+quebra.** Ele estava fazendo na mão o que o desenho deveria fazer — nenhuma das
+duas variantes cobre uma frase inteira.
+
+### Variante C
+
+Junta o que cada uma acerta, e a peça que faltava era onde qualificar a coda:
+
+- `LB` **sonoriza**, `LT` **nasaliza** — dedos dedicados, que é o que B jogou fora
+- roll do esquerdo `←`/`→` = **líquida**; `↗` = re-grafia (como já era)
+- `RB` = coda; **com RB, o roll manda a líquida para a coda em vez do ataque**
+
+Uma regra, dois lugares: *o roll compõe a líquida, e RB diz onde ela cai.* Não
+gasta dedo novo, e **L3 e R3 somem do desenho inteiro** — que era o objetivo
+declarado da variante B, agora sem o custo que a matou.
+
+Cobertura enumerada, sobre as 280 formas de sílaba que o desenho promete:
+
+| | alcança | usa L3/R3 |
+|---|---|---|
+| A | 166 | **sim** |
+| B | 102 | não |
+| **C** | **166** | **não** |
+
+C empata com A em cobertura e não paga o L3/R3. O que continua faltando nas
+duas é ataque-com-cluster **mais** coda ("pres", "trans", "nhos") — 96 das 114
+ausências.
+
+### Outros achados do mesmo log
+
+**O zero do analógico não é zero.** O controle reportou repouso em
+`x=-0.164, y=0.066`. Isso nunca troca de gate, mas come até **44% da margem
+angular** (10° de 22,5° no ↑) e, com deflexão parcial de 0.7 numa diagonal, o
+raio efetivo cai para **0.54 — abaixo do limiar de entrada 0.55**, e o gate
+simplesmente não dispara. Agora o repouso é aprendido continuamente (só de
+amostras com raio < 0.25, devagar, para um empurrão real não arrastar o zero) e
+subtraído antes de calcular gate e raio.
+
+**Meu detector de conflito gritava lobo.** Ele marcava `RB`+`LB` como conflito —
+mas essa é também a digitação **normal** da coda `-r`. Os 2 "conflitos" do log
+eram os infinitivos de "desmerecer", digitados corretamente. Agora `ambiguo` é
+registrado sem alarme e `CONFLITO` fica só para **perda silenciosa** de verdade
+(cluster inexistente). E a troca de variante passou a gravar o que aconteceu
+logo antes dela, que foi a evidência que valeu neste log.
+
+**O `m` provisório engana.** Em "insta", o commit de `i`+nasal mostrou "im" —
+correto para uma palavra que terminasse ali — e ele apagou achando que estava
+errado. Se tivesse seguido, `iN`+`s`+`ta` resolveria para "insta". O arquifonema
+nasal aparece como `m` no fim do buffer e assusta antes de a palavra fechar.
+Sem correção decidida.
+
+**O que funcionou:** `é` saiu acentuado direto do gate; o ciclo de acento fez
+"porque"→"porquê" com um toque de `←` (ele foi pelo caminho curto sozinho) e
+"to"→"tó"→"tô"; o `s↔z` consertou "fasem"→"fazem"; e "fazendo" saiu certo com o
+`N` resolvendo contra o `d` da sílaba seguinte.
+
+---
+
 **Em aberto:**
 1. Fechar A no motor e decidir o que fazer com B (hoje as duas seguem lá).
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,

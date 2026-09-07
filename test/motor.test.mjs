@@ -11,7 +11,7 @@ const js   = html.split('<script>')[1].split('</script>')[0];
 const puro = js.split('// ---------------------------------------------------------------- wheels')[0];
 const M = new Function('performance','document', puro +
   `return {orthograph, finish, landmarks, NUCLEUS_BY_GATE, GLIDE,
-           buildOnset, stick, btn, setVar: v => { variant = v; }};`
+           buildOnset, buildCoda, stick, btn, setVar: v => { variant = v; }};`
 )({now:()=>0},{getElementById:()=>({})});
 
 const S = (o,v,n=false,c='',respell=false) => ({onset:o, vowel:v, nasal:n, coda:c, respell});
@@ -104,6 +104,28 @@ t('passo',    P(S('p','a'),S('s','o')),               'passo');
 t('caro',     P(S('c','a'),S('r','o')),               'caro');
 t('carro',    P(S('c','a'),S('rr','o')),              'carro');
 t('trabalho', P(S('tr','a'),S('b','a'),S('lh','o')),  'trabalho');
+
+grupo('variante C: as sílabas que o log mostrou o Caio perdendo');
+// C: LB sonoriza, LT nasaliza, roll = líquida; com RB a líquida vai pra CODA
+const C = (gates,v,{voiced=false,nasal=false,rb=false}={}) => {
+  M.setVar('C'); M.stick.L.gates = gates;
+  Object.assign(M.btn,{LB:voiced?1:0, LT:nasal?1:0, RB:rb?1:0, L3:0, R3:0});
+  const o = M.buildOnset();
+  return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:M.buildCoda()};
+};
+// gates: ↑0=t ↗1=c →2=s ↘3=p ↓4=m ↙5=f ←6=l ↖7=x
+t('tar   t + coda-r  (can·TAR)', P(C([0,2],'a',{rb:true})),            'tar');
+t('dar   t sonoro + coda-r',     P(C([0,2],'a',{voiced:true,rb:true})),'dar');
+t('das   t sonoro + coda-s',     P(C([0],'a',{voiced:true,rb:true})),  'das');
+t('mer   m + coda-r (des·MER·ecer)', P(C([4,2],'e',{rb:true})),        'mer');
+t('sol   s + coda-l',            P(C([2,6],'o',{rb:true})),            'sol');
+t('bens  b + nasal + coda-s',    P(C([3],'e',{voiced:true,nasal:true,rb:true})), 'bens');
+t('pro   p + roll r, sem coda',  P(C([3,2],'o')),                      'pro');
+t('tra   t + roll r',            P(C([0,2],'a')),                      'tra');
+t('nho   m sonoro + roll r',     P(C([4,2],'o',{voiced:true})),        'nho');
+t('cebola  re-grafia segue valendo em C',
+  P(C([2,1],'e'),S('b','o'),S('l','a')),                               'cebola');
+console.log('  C não usa L3 nem R3 em lugar nenhum');
 
 grupo('roll: só primeiro, último e inversões de sentido');
 t('ai  [4,5,6,7]', N([4,5,6,7]), 'ai');
