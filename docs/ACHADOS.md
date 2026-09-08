@@ -684,6 +684,64 @@ projeto:
 > sobrecarregado — e por isso A (que sobrecarregava a líquida) doía menos que B
 > (que sobrecarregava sonoridade e nasalidade).
 
+---
+
+## 12. Ponto de retomada (07/09, fim da noite)
+
+Levantado pelo Caio, para resolver depois. Ele mesmo já desconfiou da própria
+ideia (*"acho q vai até estragar kk"*), e a medição abaixo é para decidir com
+número em vez de intuição.
+
+### O que ele observou
+
+1. **`LT` + `LB` está livre** durante a sílaba.
+2. **Fazer `-s` e fazer `-r` são mutuamente excludentes** — mas existe coda
+   complexa: *superstição* tem `pers`, com **r + s** fechando a sílaba. Se `-r`
+   e `-s` fossem gestos diferentes e combináveis, a sílaba sairia.
+3. Ideia de rearranjo: **a letra `l` iria para o `R3`** e o **vozeamento para o
+   `LT`** — porque *"haja L3 pra tanta digitação"*.
+
+### A medição muda a prioridade dos dois pontos
+
+**O item 2 é menor do que parece, porque o caso frequente já funciona.**
+Codas complexas, medidas por token:
+
+| | tokens | formas | |
+|---|---|---|---|
+| **/ns/** | **0,113%** | 344 | monstro, construir, instante, transporte |
+| /bs/ | 0,0126% | 58 | substituir, substância, obstáculo |
+| /rs/ | 0,0066% | 45 | perspectiva, superstição, perspicaz — e metade é nome estrangeiro (porsche, kirsten, first) |
+| /ls/ | 0,0008% | 8 | quase tudo estrangeiro |
+
+**/ns/ é 17× mais frequente que /rs/ — e já sai hoje**, porque a nasalidade é
+traço do **núcleo** (R3), não da coda: `i` + nasal + coda `-s` produz "ins"
+direto. "sons", "bens", "instante" já funcionam. Sobra o /rs/, com 0,0066% e
+poucas palavras portuguesas.
+
+**O item 3 tem base forte, e é o mais promissor.** Contagem de botões nas 99
+sílabas da sessão em D:
+
+| botão | sílabas | |
+|---|---|---|
+| RT | 100% | o commit |
+| **L3** | **28%** | **vozeamento — a cada 3 ou 4 sílabas** |
+| R3 | 10% | nasalização |
+| RB | 9% | coda |
+| LB | 4% | tipo da coda |
+| **LT** | **2%** | tipo da coda |
+
+Ou seja: **o modificador mais usado mora no clique do analógico, que é o que
+mais incomoda, enquanto os dois bumpers estão praticamente ociosos.** Trocar
+vozeamento (28%) por tipo-de-coda (4% e 2%) de lugar é rearranjo por frequência,
+e a queixa é legítima.
+
+O que essa troca custa é o que precisa ser pensado com calma: `LT`/`LB` durante
+a sílaba já qualificam a coda, e o desenho inteiro da D existe porque **nada é
+compartilhado**. Mover o vozeamento para o `LT` recria exatamente o conflito que
+matou a B, a menos que o tipo da coda vá para outro lugar antes.
+
+---
+
 **Em aberto:**
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
