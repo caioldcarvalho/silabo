@@ -164,7 +164,8 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
 </div>
 
 <p class="note">Teclado para testar sem controle: <b>W A S D</b> + <b>Q E Z C</b> movem o analógico esquerdo, <b>I J K L</b> + <b>U O M .</b> movem o direito, <b>Espaço</b> confirma a sílaba. <b>1</b> e <b>2</b> são LB e LT, <b>3</b> é RB, <b>4</b> e <b>5</b> são L3 e R3.
-<b>↑</b> cicla a caixa, <b>↓</b> a sibilante, <b>(</b> e <b>'</b> põem parêntese e aspas.</p>
+<b>↑</b> cicla a caixa, <b>↓</b> a sibilante, <b>(</b> e <b>'</b> põem parêntese e aspas.
+<b>Alt</b>+setas move o cursor (com <b>Ctrl</b>, por palavra).</p>
 
 <script>
 // ---------------------------------------------------------------- gates
@@ -242,7 +243,13 @@ function flash(k){ flashes[k] = performance.now()+150; }
 function lit(k){ return held[k] || (flashes[k]||0) > performance.now(); }
 
 let word = '';      // current word buffer (already orthographed)
-let text = '';      // committed text
+let text = '';      // committed text, up to the CURSOR
+let depois = '';    // committed text AFTER the cursor — a gap buffer, and the
+                    // reason the cursor cost almost nothing: everything that
+                    // already existed appends to `text` and slices from its
+                    // end, so it all keeps working and starts happening AT the
+                    // cursor by construction. Only render and the two move
+                    // functions know this exists.
 let m = {g:0,c:0,t0:0};
 
 // ---------------------------------------------------------------- geometry
@@ -370,13 +377,17 @@ function current(){
 // ---------------------------------------------------------------- orthography
 // operates on the whole word buffer, not on the syllable — this is what lets
 // segmentation be free (ca.mpo and cam.po must both produce "campo")
-function orthograph(prevWord, syl){
+// `contexto` is what sits to the left when the word buffer is empty — with a
+// cursor that can land inside a word, "what came before" and "what I am going
+// to concatenate onto" stopped being the same string. Only the contextual
+// rules read it; the concatenation still uses prevWord alone.
+function orthograph(prevWord, syl, contexto){
   let {onset,vowel,nasal,coda,respell} = syl;
   if(!onset && !vowel && !coda) return prevWord;
 
   const firstV = vowel[0] || '';
   const front = (firstV==='e'||firstV==='é'||firstV==='i');
-  const lastCh = prevWord.slice(-1);
+  const lastCh = (prevWord || contexto || '').slice(-1);
   const afterVowel = /[aeiouáéíóúâêôãõà]/i.test(lastCh);
 
   // The user rolled to ↗ asking for the other spelling — no automatic rule
@@ -467,7 +478,7 @@ function commit(){
     return;
   }
   const before = word;
-  word = orthograph(word, syl);
+  word = orthograph(word, syl, text);
   // Multi-letter onsets capitalise correctly on their own: "qu"→"Qu" (Quando),
   // "ch"→"Ch" (Chave), "nh"→"Nh". Nothing to special-case.
   if(!before && inicioDeFrase()) word = maiuscula(word);
@@ -730,7 +741,7 @@ function renderHud(){
 function render(){
   const s = current();
   const el = document.getElementById('syl');
-  const preview = finish(orthograph(word, s)).slice(finish(word).length) || '';
+  const preview = finish(orthograph(word, s, text)).slice(finish(word).length) || '';
   el.innerHTML = preview ? preview : '<span class="dim">—</span>';
 
   const bits = [];
@@ -741,7 +752,7 @@ function render(){
     (performance.now() < avisoAte) ? '⚠ ' + avisoTxt : bits.join('   ·   ');
 
   document.getElementById('out').innerHTML =
-    escapeHtml(text+finish(word)) + '<i>&nbsp;</i>';
+    escapeHtml(text+finish(word)) + '<i>&nbsp;</i>' + escapeHtml(depois);
 
   document.getElementById('mg').textContent = m.g;
   document.getElementById('mc').textContent = m.c;
@@ -777,6 +788,10 @@ const BINDS = [['analógico esq.','ataque (8 direções)'],
      ['→ / ←','cicla o acento da última vogal'],
      ['↓','cicla a sibilante: ss → s → z → x'],
      ['↑','cicla a caixa: caio → Caio → CAIO'],
+     ['— 2ª página: segure o analógico DIREITO em ↑ —',''],
+     ['→ / ←','move o cursor uma letra'],
+     ['↑ / ↓','move o cursor uma palavra'],
+     ['','página 1 corrige o texto, página 2 navega nele'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],
      ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
@@ -811,7 +826,25 @@ function atRest(){ return stick.L.live===null && stick.R.live===null; }
 // say so; one that silently hits the wrong target is worse.
 function apagaUm(){
   if(word) word = finish(word).slice(0,-1);
-  else text = text.slice(0,-1);
+  else if(text) text = text.slice(0,-1);
+  else avisa('o cursor está no começo do texto');   // nunca falhar em silêncio
+}
+
+// The cursor walks the VISIBLE text, so the word buffer is resolved before it
+// moves — same rule as backspace and the case cycle. After a move the buffer is
+// always empty, which is what lets everything downstream stay unchanged.
+function moveCursor(dir, porPalavra){
+  if(word){ text += finish(word); word = ''; }
+  if(dir < 0){
+    if(!text) return null;
+    const n = porPalavra ? (text.match(/\S*\s*$/)[0].length || 1) : 1;
+    depois = text.slice(-n) + depois; text = text.slice(0, -n);
+  } else {
+    if(!depois) return null;
+    const n = porPalavra ? (depois.match(/^\s*\S*/)[0].length || 1) : 1;
+    text += depois.slice(0, n); depois = depois.slice(n);
+  }
+  return dir < 0 ? 'esq' : 'dir';
 }
 
 function endWord(suffix){
@@ -952,8 +985,37 @@ function cycleCaps(){
   return virou;
 }
 
+// The d-pad has a SECOND PAGE, and the shift is a motor fact rather than a
+// table: hold the right stick at ↑ and the four directions mean something else.
+// Three things make that gate the right one, and all three are structural:
+//   · ↑ is the only nucleus gate that writes no vowel ('—'), so the preview
+//     stays empty and no satellite is drawn while you correct something else;
+//   · the d-pad and the LEFT stick are the same thumb, so this combination is
+//     only reachable with the onset empty — it cannot collide with a syllable
+//     that has a consonant, by anatomy rather than by convention;
+//   · it was dead. dpad() returned early on any deflection at all, so d-pad
+//     with the right stick out was an addressable combination that did nothing.
+// Page 1 CORRECTS what is written, page 2 NAVIGATES it. One sentence each.
+function paginaDpad(){
+  if(stick.L.live !== null) return 0;              // polegar esquerdo no ataque
+  if(stick.R.live === null) return 1;              // nada defletido: página 1
+  return stick.R.live === 0 ? 2 : 0;               // só o gate ↑ é o shift
+}
+
 function dpad(now){
-  if(!atRest()) { Object.assign(dpadPrev, now); return; }
+  const pg = paginaDpad();
+  if(!pg) { Object.assign(dpadPrev, now); return; }
+  if(pg === 2){
+    const mv = (d,palavra) => { const r = moveCursor(d,palavra);
+      tlog('dpad',{op:'cursor'+(palavra?'-palavra':''), dir:d<0?'esq':'dir', achou:!!r});
+      if(!r) avisa(d<0 ? 'o cursor já está no começo' : 'o cursor já está no fim'); };
+    if(now.left  && !dpadPrev.left ) mv(-1,false);
+    if(now.right && !dpadPrev.right) mv(+1,false);
+    if(now.up    && !dpadPrev.up   ) mv(-1,true);
+    if(now.down  && !dpadPrev.down ) mv(+1,true);
+    Object.assign(dpadPrev, now);
+    return;
+  }
   if(now.up && !dpadPrev.up){ const c=cycleCaps();
     tlog('dpad',{op:'caixa', virou:c, achou:!!c});
     if(!c) avisa('nenhuma palavra para trocar a caixa'); }
@@ -1010,7 +1072,7 @@ function faceButtons(pad){
     if(now.B && !face.B){
       if(btn.LB && btn.LT){
         tlog('apaga', {alvo:'tudo', antes:(text+word).slice(-40)});
-        text=''; word=''; face.heldB=0;
+        text=''; word=''; depois=''; face.heldB=0;
       } else {
         face.heldB = performance.now(); face.nextB = face.heldB + B_ESPERA;
         face.apagados = 1;
@@ -1093,11 +1155,13 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'){ kbBtn.RT=1; e.preventDefault(); }
   if(e.code==='Enter'){ text+=finish(word)+' '; word=''; flash('A'); }
   if(e.code==='Backspace'){
-    if(e.ctrlKey||e.shiftKey){ tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; }
+    if(e.ctrlKey||e.shiftKey){ tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; depois=''; }
     else apagaUm();
     flash('B'); e.preventDefault(); }
-  if(e.code==='ArrowRight'){ cycleAccent(+1); flash('right'); e.preventDefault(); }
-  if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
+  if(e.code==='ArrowRight'&&e.altKey){ moveCursor(+1,e.ctrlKey); flash('right'); e.preventDefault(); }
+  else if(e.code==='ArrowLeft'&&e.altKey){ moveCursor(-1,e.ctrlKey); flash('left'); e.preventDefault(); }
+  else if(e.code==='ArrowRight'){ cycleAccent(+1); flash('right'); e.preventDefault(); }
+  else if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
   if(e.code==='ArrowDown'){  if(!toggleSibilant()) avisa('nenhuma sibilante para alternar');
                              flash('down');  e.preventDefault(); }
   if(e.code==='ArrowUp'){    if(!cycleCaps()) avisa('nenhuma palavra para trocar a caixa');
@@ -1116,7 +1180,7 @@ addEventListener('keyup',e=>{
 // ---------------------------------------------------------------- boot
 document.getElementById('rs').onclick=resetMetrics;
 document.getElementById('wipe').onclick=()=>{
-  tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; render(); };
+  tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; depois=''; render(); };
 document.getElementById('tdl').onclick=baixarTele;
 document.getElementById('tclr').onclick=limparTele;
 function resetMetrics(){ m={g:0,c:0,t0:0}; render(); }

@@ -20,7 +20,8 @@ const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo + `return {satellites, renderHud, stick, btn, held, flash,
                    commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
-                   cycleCaps, inicioDeFrase, delimita,
+                   cycleCaps, inicioDeFrase, delimita, moveCursor, paginaDpad, dpad,
+                   setDepois:d=>{depois=d}, getDepois:()=>depois,
                    setWord:w=>{word=w}, getWord:()=>word,
                    setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest, finish};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
@@ -265,6 +266,50 @@ M.tlogPad({id:'Fake Pad', mapping:'', buttons:new Array(11), axes:[0,0,0,0,0,0,0
 t('perfil do controle é gravado',
   JSON.stringify(M.tele.pads[0]), ['Fake Pad','"mapping":""','"botoes":11','1.29']);
 console.log('  ↑ é isso que permite diagnosticar d-pad morto pelo log');
+
+console.log('\n— cursor: uma cauda à direita, e o d-pad ganha 2ª página —');
+// a página só existe com o analógico ESQUERDO parado — d-pad e stick esquerdo
+// são o mesmo polegar, então a restrição é anatômica, não convencionada
+const pag = (L,R) => { M.stick.L.live=L; M.stick.R.live=R; return String(M.paginaDpad()); };
+t('nada defletido → página 1',        pag(null,null), ['1']);
+t('direito em ↑ (gate 0) → página 2', pag(null,0),    ['2']);
+t('direito em outro gate → inerte',   pag(null,4),    ['0']);
+t('esquerdo defletido → inerte',      pag(2,0),       ['0']);
+M.stick.L.live=null; M.stick.R.live=null;
+
+const cur = (t0,d0,dir,palavra=false) => { M.setText(t0); M.setDepois(d0); M.setWord('');
+  M.moveCursor(dir,palavra); return M.getText()+'|'+M.getDepois(); };
+t('← anda uma letra',        cur('casa','',-1),        ['cas|a']);
+t('→ devolve',               cur('cas','a',+1),        ['casa|']);
+t('← por palavra',           cur('uma frase','',-1,true), ['uma |frase']);
+t('→ por palavra',           cur('uma ','frase',+1,true),  ['uma frase|']);
+t('← no começo não anda',    cur('','texto',-1),       ['|texto']);
+t('→ no fim não anda',       cur('texto','',+1),       ['texto|']);
+t('e devolve null pra UI avisar',
+  (()=>{M.setText('');M.setDepois('');M.setWord(''); return String(M.moveCursor(-1));})(), ['null']);
+// o buffer cru se resolve antes de andar — mesma regra do backspace
+t('resolve o /~/ antes de mover',
+  (()=>{M.setText('a ');M.setDepois('');M.setWord('questau~'); M.moveCursor(-1);
+        return M.getText()+'|'+M.getDepois();})(), ['a questã|o']);
+
+console.log('\n— e é isto que o cursor compra: correção alcança o texto todo —');
+// antes, editBuffer só pegava a ÚLTIMA palavra escrita
+const sobCursor = (t0,d0,fn) => { M.setText(t0); M.setDepois(d0); M.setWord(''); fn();
+  return M.getText()+M.getDepois(); };
+t('acento na palavra do meio',  sobCursor('era uma vez cafe',' e mais',()=>M.cycleAccent(+1)), ['café']);
+t('caixa na palavra do meio',   sobCursor('era uma vez caio',' e mais',()=>M.cycleCaps()),     ['Caio']);
+t('sibilante na palavra do meio',sobCursor('era uma vez faser',' e mais',()=>M.toggleSibilant()),['fazer']);
+
+console.log('\n— digitar no meio da palavra enxerga o que está à esquerda —');
+// orthograph passou a receber o contexto: sem isso, /s/ depois de vogal não
+// dobrava porque o buffer da palavra estava vazio no cursor
+const noMeio = (t0,d0,gL,gR) => { M.setText(t0); M.setDepois(d0); M.setWord('');
+  M.stick.L.gates=gL; M.stick.R.gates=gR;
+  Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0}); M.commit();
+  return M.getText()+M.getWord()+M.getDepois(); };
+t('ca|a + s+a → "cassaa" (dobrou)', noMeio('ca','a',[2],[4]),  ['cassaa']);
+t('início de palavra não dobra',    noMeio('uma ','',[2],[4]), ['uma sa']);
+M.stick.L.gates=[]; M.stick.R.gates=[]; M.stick.L.live=null; M.stick.R.live=null;
 
 console.log(`\n${ok} ok, ${bad} falha(s)`);
 process.exit(bad?1:0);

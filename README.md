@@ -72,6 +72,7 @@ Sem controle, dá para testar no teclado:
 | `2` (LT) · `4` (L3) | sonoriza · **h** (com o analógico parado) |
 | `Enter` · `Backspace` | fecha a palavra · apaga |
 | `←` `→` · `↓` · `↑` | cicla acento · sibilante · caixa |
+| `Alt`+setas (com `Ctrl`, por palavra) | move o cursor |
 | `(` · `'` | parêntese · aspas (abrem e fecham sozinhos) |
 
 ---
@@ -150,6 +151,28 @@ alógrafo não merece botão:
 | `↓` | a sibilante: `ss → s → z → x` — *isso, casa, fazer, próximo* |
 | `→` `←` | o acento da última vogal, e sempre volta ao natural |
 | `↑` | a caixa da última palavra: `caio → Caio → CAIO` |
+
+### A segunda página do d-pad
+
+Segure o **analógico direito em `↑`** e as quatro direções mudam de significado:
+
+| d-pad | página 1 (analógico solto) | página 2 (direito em ↑) |
+|---|---|---|
+| `→` `←` | acento | cursor, uma letra |
+| `↑` | caixa | cursor, uma palavra (esquerda) |
+| `↓` | sibilante | cursor, uma palavra (direita) |
+
+**Página 1 corrige o texto, página 2 navega nele.** O shift é um fato motor, não
+uma tabela — e o gate `↑` é o certo por três motivos estruturais: é o único do
+núcleo que **não escreve vogal**, então a tela não mostra nada pendente; o d-pad
+e o analógico **esquerdo** são o mesmo polegar, então a combinação só é
+alcançável com o ataque vazio e não colide com sílaba nenhuma **por anatomia**;
+e estava morta — `dpad()` desistia a qualquer deflexão.
+
+O cursor é uma **cauda** à direita: tudo que já existia continua colando no fim
+do que está à esquerda dele, então passou a acontecer *na posição do cursor* de
+graça. O ganho maior não é navegar — é que as três correções do `↓` `↑` `←→`
+deixaram de alcançar só a última palavra e passaram a alcançar **o texto todo**.
 
 O `↓` alcança as três posições em que o português deixa a escolha em aberto:
 entre vogais, no fim da palavra e **na coda antes de consoante** — que é onde

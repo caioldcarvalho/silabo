@@ -925,6 +925,69 @@ que abre cola na palavra seguinte, o que fecha na anterior.
 
 ---
 
+## 15. O d-pad tinha uma segunda página, e o cursor era barato (09/09, manhã)
+
+**Achado do Caio, e é o mesmo princípio pela terceira vez:** `dpad()` abria com
+`if(!atRest()) return` — com qualquer analógico fora do centro, o d-pad inteiro
+era ignorado. Combinação alcançável, silenciosamente inerte, exatamente como o
+`L3` em repouso do §13. E o d-pad base estava **lotado** desde a noite anterior.
+
+Ele propôs `d-cima + r-cima` para a maiúscula. Ficou assim, com duas mudanças:
+
+**1. Shift, não tabela.** *"Analógico direito em ↑ = segunda página"* é um fato
+motor, uma frase — 4 + 4. As 32 combinações que a mecânica libera são **reserva,
+não convite**: é a peneira do §12 item 6 (*slot livre é passivo, não ativo*).
+
+O gate `↑` é o certo por três razões estruturais, e nenhuma é convenção:
+- é o único gate do núcleo que **não escreve vogal** (`—`), então `buildNucleus`
+  devolve vazio e o satélite some — a tela não mostra vogal pendente enquanto
+  você conserta outra coisa;
+- **o d-pad e o analógico esquerdo são o mesmo polegar**, então a página 2 só é
+  alcançável com o ataque vazio: não colide com sílaba que tenha consoante **por
+  anatomia**, não por regra;
+- estava morta.
+
+**2. A caixa NÃO se mudou.** Pôr a maiúscula atrás de um shift de duas mãos
+inverte o custo por frequência, que é o princípio que fechou o layout no §13 —
+e a de início de frase já sai por regra, então o `↑` da página 1 serve nome
+próprio e sigla, que vêm em rajada quando vêm. Página 1 é o frequente.
+
+### O cursor custou uma cauda
+
+A segunda ideia dele era `B + direcional` para mover o cursor. **O B é o lugar
+errado**: `apagaUm()` roda no *press*, não no release — é o que faz o backspace
+repetir sem latência, e foram 112 apagamentos numa sessão. Virar modificador
+custaria latência em toda deleção. Foi para o `←→` da página 2, que é o
+mapeamento universal e não custa nada.
+
+O modelo de texto era append-only e parecia pedir refatoração. Não pediu: o
+cursor é um **gap buffer**, uma variável `depois` com o que fica à direita.
+Tudo que já existia (`endWord`, `apagaUm`, `delimita`, `editBuffer`,
+`orthograph`) **cola no fim de `text` e corta do fim de `text`** — então passou
+a operar na posição do cursor sem uma linha de mudança.
+
+Duas costuras, só:
+- `moveCursor` **resolve o buffer antes de andar**, como o backspace e a caixa
+  já faziam. É a terceira vez que essa regra aparece, e agora é padrão do
+  projeto: *toda operação que reposiciona ou reescreve trabalha no texto
+  visível*.
+- `orthograph` ganhou um terceiro argumento, `contexto`. Com um cursor que pode
+  cair **dentro** de uma palavra, "o que veio antes" e "o que eu vou
+  concatenar" deixaram de ser a mesma string — sem isso, `/s/` depois de vogal
+  não dobrava no cursor, porque o buffer da palavra estava vazio.
+
+**E o ganho maior não é navegar.** `cycleAccent`, `toggleSibilant` e
+`cycleCaps` passam por `editBuffer`, que só alcançava **a última palavra
+escrita**. Com o cursor elas alcançam o texto inteiro — de graça, por
+construção. Coberto por teste: acento, caixa e sibilante numa palavra do meio.
+
+Também: apagar no começo do texto **avisa** em vez de não fazer nada, e mover
+além da borda também. Falha silenciosa vira tentativa repetida (§10).
+
+**Estado:** 100 casos no motor, 96 na UI.
+
+---
+
 **Em aberto:**
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
@@ -934,8 +997,12 @@ que abre cola na palavra seguinte, o que fecha na anterior.
 4. Labialização no ataque: `qu`+a resolvido por regra em 09/09; falta o
    tritongo (Uruguai, quais) e o /kw/ antes de e/i (frequente, tranquilo).
 5. Resto da pontuação (dois-pontos, ponto-e-vírgula, travessão).
-7. `L3` com o analógico **defletido** segue livre — o único canal sobrando do
-   desenho inteiro. Não gastar sem passar pela peneira do item 6.
+7. `L3` com o analógico **defletido** segue livre; e a página 2 do d-pad tem
+   três direções vagas (só `←→↑↓` do cursor ocupam, e `↓` sobra se o cursor por
+   palavra virar outra coisa). Reserva, não convite — peneira do item 6 antes.
+9. O ciclador de nasal escrita (`ãs ⇄ ans`, saída pro "trans") era o candidato
+   ao `↑` e não entrou: página 1 é do frequente, e o caso é marcado. Cabe na
+   página 2 se aparecer no log.
 8. Coda complexa /rs/, agora sem endereço nenhum (0,0279%, metade estrangeira).
    Só volta se o item 7 for gasto nela, e provavelmente não vale.
 6. Antes de gastar qualquer slot novo, a peneira: **é derivável por regra? → é
