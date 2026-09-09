@@ -8,3 +8,5 @@ pad_*.svg
 .screenshot.html
 vazio.png
 uso.png
+win/bin/
+win/obj/
