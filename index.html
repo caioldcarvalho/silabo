@@ -471,6 +471,42 @@ function inicioDeFrase(){
 }
 function maiuscula(w){ return w.replace(/^([a-zà-ÿ])/, c => c.toUpperCase()); }
 
+// Frase-modelo: um ARCO DE DIFICULDADE, não uma frase bonita. Cada fase
+// introduz um mecanismo e reusa todos os anteriores, então quem chega no fim
+// passou por tudo que o desenho sabe fazer. `test/frase.test.mjs` prova que ela
+// é digitável — sílaba por sílaba, e que cada ataque tem um gesto que o produz.
+const FRASE_MODELO = [
+ {mec:'sílaba simples', dica:'ataque + núcleo, nenhum modificador',
+  texto:'O sapo pula.'},
+ {mec:'vozeamento',     dica:'LT pareia o ataque: t→d, s→z, c→g',
+  texto:'O gato do tio nada.'},
+ {mec:'ditongo',        dica:'roll no analógico direito',
+  texto:'Bia viu o pai e o boi.'},
+ {mec:'nasal',          dica:'R3 nasaliza o núcleo',
+  texto:'A mãe canta um som bom.'},
+ {mec:'coda',           dica:'RB = -s · LB = -r · LB+RB = -l',
+  texto:'Os dois vão cantar até o sol sumir.'},
+ {mec:'cluster',        dica:'roll no esquerdo: → = +r, ← = +l',
+  texto:'O prato, o livro e a flor grande ficam na sala.'},
+ {mec:'grafia',         dica:'roll até ↗, e os digrafos lh / nh / ch',
+  texto:'A chuva molhou a gente da cidade.'},
+ {mec:'h e qu',         dica:'L3 com o analógico parado · o qu sai por regra',
+  texto:'Hoje quatro pessoas quase caem.'},
+ {mec:'pós-correção',   dica:'d-pad: acento, sibilante, caixa, e a pontuação',
+  texto:'Você já explicou a próxima "questão" (a de ontem) pra Bia?'}
+];
+
+// O que commit() faz com a sílaba, separado do que ele faz com o gamepad — o
+// teste da frase exercita ESTE caminho, e não uma cópia que pode divergir.
+function poeSilaba(syl){
+  const before = word;
+  word = orthograph(word, syl, text);
+  // Multi-letter onsets capitalise correctly on their own: "qu"→"Qu" (Quando),
+  // "ch"→"Ch" (Chave), "nh"→"Nh". Nothing to special-case.
+  if(!before && inicioDeFrase()) word = maiuscula(word);
+  return word.length - before.length;
+}
+
 function commit(){
   const syl = current();
   if(!syl.onset && !syl.vowel && !syl.coda){
@@ -478,11 +514,7 @@ function commit(){
     return;
   }
   const before = word;
-  word = orthograph(word, syl, text);
-  // Multi-letter onsets capitalise correctly on their own: "qu"→"Qu" (Quando),
-  // "ch"→"Ch" (Chave), "nh"→"Nh". Nothing to special-case.
-  if(!before && inicioDeFrase()) word = maiuscula(word);
-  const gained = word.length - before.length;
+  const gained = poeSilaba(syl);
   if(gained>0){ m.c += gained; }
   m.g++;
   if(!m.t0) m.t0 = performance.now();
