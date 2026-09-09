@@ -7,7 +7,10 @@ Prova as quatro coisas que só o Windows responde, e que não dá pra saber sem 
 | ler o controle com OUTRO app em foco | XInput é polling, não precisa de foco | ✅ compila |
 | injetar texto no app de baixo | `SendInput` + `KEYEVENTF_UNICODE` | ✅ compila |
 | overlay sem roubar o foco | `WS_EX_NOACTIVATE` + `WS_EX_TRANSPARENT` | ✅ compila |
-| acorde de ativação | LT+RT+3× — ver abaixo | ⚠️ ver o Guide |
+| acorde de ativação | botão do acorde + LT+RT | ⚠️ ver o Guide |
+
+Rode `silabo.exe --teste` pra provar a injeção **sem o controle**: ele chama o
+`SendInput` de verdade e escreve o resultado em `%TEMP%\silabo-teste.txt`.
 
 ## Rodar
 
@@ -21,6 +24,21 @@ cd ~/workspace/silabo/win
 A overlay aparece no canto inferior direito. **Ela nasce parada**: LT+RT+3× no
 botão do acorde liga e desliga. Ligada, o RT confirma a sílaba e ela é digitada
 na janela que estiver com o foco.
+
+## Dois bugs que a primeira rodada pegou
+
+**1. Detectava tudo e não digitava.** A struct `INPUT` é uma **união**, e o
+tamanho dela é o do maior membro (`MOUSEINPUT`). Declarando só o `KEYBDINPUT`
+ela media **32 bytes**; o `SendInput` exige **40**. Com o `cbSize` errado ele
+**devolve 0 e não insere nada, sem erro e sem exceção** — a falha silenciosa
+que este projeto inteiro persegue, agora do lado nativo. `Digita()` passou a
+conferir o retorno e a overlay mostra o erro.
+
+**2. O acorde colidia com o próprio método.** `LT+RT` era o prefixo da
+ativação, mas **LT é vozeamento e RT é commit** — os dois juntos acontecem em
+toda sílaba vozeada (25% delas, medido). Quem discrimina agora é o **botão**;
+enquanto ele está segurado o commit fica suspenso, e fora disso a digitação é
+normal.
 
 ## O problema do botão Xbox
 

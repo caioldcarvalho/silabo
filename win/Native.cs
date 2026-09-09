@@ -48,8 +48,18 @@ internal static class Native {
   // ------------------------------------------------------------- SendInput
   [StructLayout(LayoutKind.Sequential)]
   struct KEYBDINPUT { public ushort wVk, wScan; public uint dwFlags, time; public IntPtr dwExtraInfo; }
+  // MOUSEINPUT precisa estar aqui mesmo sem ser usado: INPUT é uma UNIÃO, e o
+  // tamanho dela é o do maior membro. Sem isto a struct mede 32 e o SendInput
+  // exige 40 — e quando o cbSize está errado ele devolve 0 e NÃO INSERE NADA,
+  // sem erro e sem exceção. Foi o que fez a overlay detectar tudo e não digitar.
+  [StructLayout(LayoutKind.Sequential)]
+  struct MOUSEINPUT { public int dx, dy; public uint mouseData, dwFlags, time; public IntPtr dwExtraInfo; }
   [StructLayout(LayoutKind.Explicit)]
-  struct INPUT { [FieldOffset(0)] public uint type; [FieldOffset(8)] public KEYBDINPUT ki; }
+  struct INPUT {
+    [FieldOffset(0)] public uint type;
+    [FieldOffset(8)] public MOUSEINPUT mi;
+    [FieldOffset(8)] public KEYBDINPUT ki;
+  }
 
   [DllImport("user32.dll", SetLastError = true)]
   static extern uint SendInput(uint n, [In] INPUT[] p, int cb);
@@ -59,6 +69,7 @@ internal static class Native {
   // Digita texto arbitrário na janela que tem o foco. KEYEVENTF_UNICODE manda o
   // caractere direto, sem passar por layout de teclado — que é exatamente o que
   // um método silábico precisa: ele emite "ção", não uma sequência de teclas.
+  public static string? UltimoErro;
   public static void Digita(string txt) {
     var ins = new List<INPUT>(txt.Length * 2);
     foreach (var ch in txt) {
@@ -67,7 +78,12 @@ internal static class Native {
       ins.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wScan = ch, dwFlags = KEYEVENTF_UNICODE } });
       ins.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wScan = ch, dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP } });
     }
-    if (ins.Count > 0) SendInput((uint)ins.Count, ins.ToArray(), Marshal.SizeOf<INPUT>());
+    if (ins.Count == 0) return;
+    // Tecla que não acha alvo tem que avisar — a regra do projeto vale aqui
+    // também. SendInput falha devolvendo 0, sem exceção.
+    var enviados = SendInput((uint)ins.Count, ins.ToArray(), Marshal.SizeOf<INPUT>());
+    UltimoErro = enviados == ins.Count ? null
+      : $"SendInput inseriu {enviados}/{ins.Count} (erro {Marshal.GetLastWin32Error()})";
   }
 
   // --------------------------------------------------------------- janela
@@ -115,6 +131,11 @@ internal static class Native {
   [DllImport("gdi32.dll")] public static extern uint SetTextColor(IntPtr dc, uint c);
   [DllImport("gdi32.dll")] public static extern int SetBkMode(IntPtr dc, int mode);
   [DllImport("gdi32.dll", CharSet = CharSet.Unicode)] public static extern bool TextOut(IntPtr dc, int x, int y, string s, int len);
+  [StructLayout(LayoutKind.Sequential)] public struct SIZE { public int cx, cy; }
+  [DllImport("gdi32.dll", CharSet = CharSet.Unicode)] public static extern bool GetTextExtentPoint32(IntPtr dc, string s, int len, out SIZE sz);
+  [DllImport("gdi32.dll")] public static extern IntPtr CreatePen(int style, int width, uint color);
+  [DllImport("gdi32.dll")] public static extern bool Ellipse(IntPtr dc, int l, int t, int r, int b);
+  [DllImport("gdi32.dll")] public static extern IntPtr GetStockObject(int i);
 
   // WS_EX_NOACTIVATE é o que faz tudo funcionar: sem ele a overlay rouba o
   // foco e o SendInput passa a digitar nela mesma em vez de no app de baixo.
