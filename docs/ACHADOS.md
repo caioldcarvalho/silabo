@@ -1097,3 +1097,93 @@ Não mexi porque tipografia é decisão de gosto.
    alógrafo de algo que já tem endereço? → tem endereço natural na roda?** Slot
    livre é passivo, não ativo: endereço barato faz gastar tabela onde uma regra
    sairia de graça. Foi assim que nasceram o `ç` e o `z` que acabaram de morrer.
+
+## 17. O motor virou dois, e a prova de que continuam um só (09/09, tarde)
+
+O método nativo no Windows deixou de ser spike: o `Motor.cs` é o motor inteiro —
+roll, coda, nasal, ortografador, os três ciclos do d-pad. O que isso cria é o
+problema que o projeto vinha evitando de propósito desde o primeiro teste:
+**duas implementações do mesmo motor divergem em silêncio.**
+
+`test/motor.test.mjs` evita isso extraindo o JS do `index.html` em vez de manter
+uma cópia. Do outro lado da linguagem esse truque não existe.
+
+### Por que um teste em C# escrito à mão não resolveria
+
+Um teste escrito à mão prova que o C# faz **o que o autor do teste achou que o
+JS fazia**. Que é exatamente a forma que a divergência tem. Se eu tivesse
+entendido uma regra errado, escreveria o C# errado e o teste errado juntos, e
+ele passaria verde.
+
+Então o JS não é consultado, é a **fonte**. `tools/gabarito.mjs` varre o motor e
+escreve o que sai; `win/teste/Prova.cs` só compara. Não há um único valor
+esperado escrito à mão do lado do C#.
+
+**Exaustivo onde o espaço é finito** (toda sequência de gates até 4 posições, o
+cross-product inteiro do ortografador: 34.560 combinações de ataque × núcleo ×
+nasal × coda × ambiente) e **amostrado com semente fixa** onde não é (4.000
+palavras de várias sílabas). Semente fixa e não aleatória: um gabarito que muda
+sozinho entre duas rodadas não é gabarito.
+
+Um detalhe de economia que virou princípio: o cross-product é determinístico,
+então **guardar as entradas é guardar o que os dois lados já sabem gerar**. O
+arquivo carrega as listas uma vez e só as saídas, na ordem dos laços. A ordem
+passa a ser o contrato, documentada nos dois lados, com a contagem conferindo se
+bateu. Cortou o arquivo de 2 MB para 900 KB.
+
+### O que a mutação revelou
+
+65 mil asserções verdes de primeira é uma informação ruim: **verde que não sabe
+ficar vermelho não prova nada.** Então o port foi quebrado de propósito, uma
+regra por vez. Seis mutações morreram na hora. Duas sobreviveram:
+
+**1. `Math.Round` no lugar do arredondamento do JS — buraco real.** O .NET
+arredonda para o **par** (banker's rounding) e o JS para cima. Numa fronteira de
+gate isso é o dedo cair na casa errada. O gabarito não pegou porque ele varria
+*letras*, e a geometria do gate **não produz letra nenhuma** — ela só decide em
+que casa o polegar está. É a camada com a maior chance de porte errado
+silencioso justamente por não aparecer em nenhuma saída de texto.
+
+Tapar o buraco não foi só "varrer mais pontos": foi preciso **procurar os
+empates**, os pontos em que `a/(π/4)` cai exatamente em `k+0,5`. Eles existem e
+são alcançáveis com o analógico defletido — a busca está dentro do gerador,
+porque dependem do arredondamento de `sin`/`cos`/`atan2` e mudariam se alguém
+mexesse na fórmula.
+
+> Uma varredura de saídas só cobre as camadas que produzem saída. Camada que só
+> decide *estado* precisa ser varrida por ela mesma.
+
+**2. O guarda de gate repetido no `track` — mutante equivalente.** Sobreviveu
+porque é **código morto nos dois lados**: o `if (g === s.live) return` logo acima
+já garante a condição. Não é buraco de cobertura, é uma linha que nunca fez
+nada. Fica, porque remover código morto de uma tradução literal é a forma mais
+fácil de introduzir uma diferença.
+
+### A reconciliação: a peça que só existe no nativo
+
+Na web o texto mora num buffer que a página desenha, então uma pós-correção é só
+reescrever a string. No Windows o texto já está **dentro do aplicativo de
+baixo**, e a única coisa que a overlay pode fazer é mandar teclas.
+
+Então ela guarda o que acredita ter mandado e calcula o menor conserto: apagar o
+sufixo que divergiu, redigitar o resto. É isso que faz `vose` virar `você` com
+dois backspaces em vez de apagar a frase. Medido nas duas frases-modelo: **367
+caracteres digitados, 35 apagados, maior conserto = 7**.
+
+É também a única peça do caminho nativo capaz de **destruir texto que não é
+nosso** — se o usuário clicar noutro lugar, o modelo interno dessincroniza e um
+conserto grande apagaria o que ela não escreveu. Por isso ela mora num arquivo
+puro (`win/Reconcilia.cs`), testada junto com o motor em vez de solta dentro do
+laço de eventos, com **teto de 40**: acima disso recusa, reancora e avisa.
+
+> A mesma doutrina de sempre, do outro lado: falha silenciosa em método de
+> entrada vira tentativa repetida. Aqui a falha silenciosa seria pior — seria
+> apagar texto alheio.
+
+### O roteiro das frases virou dado
+
+As duas frases-modelo eram digitadas por closures dentro do `frase.test.mjs`.
+Isso funcionava enquanto só o JS precisava digitá-las. Com dois motores, **dois
+roteiros separados provariam que cada um sabe digitar a sua frase** — que não é
+a pergunta. O roteiro saiu para `test/frase-script.mjs` como dado, entra no
+gabarito e os dois lados executam a mesma sequência.

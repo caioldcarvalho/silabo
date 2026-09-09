@@ -295,7 +295,8 @@ medição, sobrevive a recarga, e **nada sai da máquina**.
 
 ## Estado
 
-Protótipo de navegador funcional. Um layout só, o que sobrou de
+Protótipo de navegador funcional **e método nativo funcionando no Windows** —
+por cima de qualquer aplicativo, com o mesmo motor ([`win/`](win/README.md)). Um layout só, o que sobrou de
 [quatro que foram testados](docs/ACHADOS.md) — os três anteriores tinham, cada
 um, um jeito de tornar sílabas **impossíveis de digitar**, e todos pelo mesmo
 motivo:
@@ -323,6 +324,8 @@ o clique de analógico de 41% das sílabas para 18%.
   metade é nome estrangeiro
 - dois-pontos, ponto-e-vírgula e travessão ainda não têm endereço
 - plural de `-ão` é lexical (pães/mãos/ações), então vai sílaba a sílaba
+- no nativo, a **segunda página do d-pad** (cursor) não está ligada: ela move um
+  gap buffer nosso, e no Windows precisaria mover o caret do aplicativo de baixo
 
 ## Testes e ferramentas
 
@@ -330,14 +333,31 @@ Sem dependências. Só `node`.
 
 ```fish
 node test/motor.test.mjs      # 100 casos — montagem da sílaba e ortografia
-node test/ui.test.mjs         # 49 casos — o que os satélites, o HUD e o log geram
+node test/ui.test.mjs         #  96 casos — satélites, HUD, ciclos, cursor
+node test/frase.test.mjs      #  17 casos — as frases-modelo são digitáveis
 node tools/corpus.mjs         # mede grafias contra corpus real de pt-BR
 node tools/screenshot.mjs     # a página em PNG (--uso, --medir)
 node tools/pad-preview.mjs    # o desenho do controle em PNG
 ```
 
+Nenhum teste mantém uma cópia do motor: todos **extraem o JS do `index.html`**,
+então uma implementação não pode divergir do que a página realmente roda.
+
 O `tools/corpus.mjs` é o que decidiu várias escolhas por medição em vez de
 intuição — inclusive derrubar duas decisões minhas que pareciam certas.
+
+### O motor tem duas implementações, e elas não podem divergir
+
+O port em C# é uma **segunda implementação**, e duas implementações divergem em
+silêncio. A regra é que o JS é a **fonte**, não uma referência:
+
+```fish
+node tools/gabarito.mjs             # varre o motor JS → test/gabarito.json
+dotnet.exe run --project win/teste  # o C# afirma contra o arquivo — 65.058 asserções
+```
+
+Nenhum valor esperado é escrito à mão do lado do C#. Detalhes, e o que a
+**mutação** revelou de buraco na cobertura, em [`win/README.md`](win/README.md).
 
 ## Para onde vai
 
@@ -351,10 +371,10 @@ src/
   wheel.js  ·  input.js  ·  metrics.js
 ```
 
-Depois, nativo: **Windows** (XInput/SDL2, overlay `WS_EX_LAYERED`, injeção via
-`SendInput`) e **Linux** (evdev para ler, **uinput** para injetar — o overlay é
-a parte dolorida, X11 é fácil e Wayland exige `layer-shell`). Num código só,
-seria Rust com `gilrs` + `egui`.
+O nativo no Windows **já existe** (`win/`) e a separação acima já vale lá: o
+`Motor.cs` compila em `net8.0` puro, sem Windows, e o Win32 mora todo no
+`Native.cs`. Falta o **Linux** — evdev para ler, **uinput** para injetar; o
+overlay é a parte dolorida, X11 é fácil e Wayland exige `layer-shell`.
 
 > Este é um experimento, sem pretensão de substituir teclado. Mas decisões que
 > fechem portas de internacionalização ou de acessibilidade são evitadas de

@@ -8,4 +8,10 @@
     <AssemblyName>silabo</AssemblyName>
     <RootNamespace>Silabo</RootNamespace>
   </PropertyGroup>
+  <!-- teste/ é outro projeto (net8.0 puro) e mora aqui dentro só pra dividir o
+       Motor.cs. Sem isto o glob padrão do SDK arrastaria o Prova.cs pra dentro
+       da overlay e o build teria dois Main. -->
+  <ItemGroup>
+    <Compile Remove="teste/**" />
+  </ItemGroup>
 </Project>

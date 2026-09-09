@@ -43,6 +43,8 @@ internal static class Native {
                       GAMEPAD_Y = 0x8000, GAMEPAD_LB = 0x0100, GAMEPAD_RB = 0x0200,
                       GAMEPAD_BACK = 0x0020, GAMEPAD_START = 0x0010,
                       GAMEPAD_LTHUMB = 0x0040, GAMEPAD_RTHUMB = 0x0080,
+                      GAMEPAD_UP = 0x0001, GAMEPAD_DOWN = 0x0002,
+                      GAMEPAD_LEFT = 0x0004, GAMEPAD_RIGHT = 0x0008,
                       GAMEPAD_GUIDE = 0x0400;   // só com XInputGetStateEx
 
   // ------------------------------------------------------------- SendInput
@@ -84,6 +86,24 @@ internal static class Native {
     var enviados = SendInput((uint)ins.Count, ins.ToArray(), Marshal.SizeOf<INPUT>());
     UltimoErro = enviados == ins.Count ? null
       : $"SendInput inseriu {enviados}/{ins.Count} (erro {Marshal.GetLastWin32Error()})";
+  }
+
+  // O backspace não pode ir por KEYEVENTF_UNICODE: aquele caminho manda um
+  // CARACTERE, e U+0008 não é a tecla de apagar — é um caractere de controle que
+  // a maioria dos aplicativos ignora. Tecla de verdade vai por virtual-key.
+  // A overlay precisa disto porque toda pós-correção (acento, caixa, sibilante)
+  // reescreve texto que já foi injetado: apaga o que divergiu e redigita.
+  const ushort VK_BACK = 0x08;
+  public static void Apaga(int quantos) {
+    if (quantos <= 0) return;
+    var ins = new List<INPUT>(quantos * 2);
+    for (int i = 0; i < quantos; i++) {
+      ins.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = VK_BACK } });
+      ins.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = VK_BACK, dwFlags = KEYEVENTF_KEYUP } });
+    }
+    var enviados = SendInput((uint)ins.Count, ins.ToArray(), Marshal.SizeOf<INPUT>());
+    UltimoErro = enviados == ins.Count ? null
+      : $"SendInput (backspace) inseriu {enviados}/{ins.Count} (erro {Marshal.GetLastWin32Error()})";
   }
 
   // --------------------------------------------------------------- janela
