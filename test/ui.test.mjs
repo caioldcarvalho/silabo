@@ -35,9 +35,9 @@ const t=(nome,got,deve)=>{const p=deve.every(d=>got.includes(d)); p?ok++:bad++;
 console.log('— satélites —');
 Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.stick.L.gates=[0]; M.satellites('l');                       // ↑ = t
-t('gate ↑ (t): tl É ataque (a·tle·ta)', texto('lsat'), ['L3','d','roll →','tr','roll ←','tl']);
+t('gate ↑ (t): tl É ataque (a·tle·ta)', texto('lsat'), ['LT','d','roll →','tr','roll ←','tl']);
 M.stick.L.gates=[3]; M.satellites('l');                       // ↘ = p, tem pr e pl
-t('gate ↘ (p): as duas líquidas', texto('lsat'), ['L3','b','roll →','pr','roll ←','pl']);
+t('gate ↘ (p): as duas líquidas', texto('lsat'), ['LT','b','roll →','pr','roll ←','pl']);
 M.stick.L.gates=[2]; M.satellites('l');                       // → = s
 t('gate → (s): oferece ↗', texto('lsat'), ['roll ↗','c / ç']);
 t('gate → (s): NÃO oferece sr/sl',
@@ -46,8 +46,8 @@ M.stick.L.gates=[7]; M.satellites('l');                       // ↖ = x
 t('gate ↖ (x): ch', texto('lsat'), ['roll ↗','ch']);
 t('gate ↖ (x): NÃO oferece xr/xl',
   /\bxr\b|\bxl\b/.test(texto('lsat')) ? 'OFERECEU CLUSTER ILEGAL' : 'xr e xl ausentes', ['ausentes']);
-Object.assign(M.btn,{L3:1}); M.satellites('l');               // x sonorizado = j
-t('↖ + L3 (j): vira g', texto('lsat'), ['roll ↗','g']);
+Object.assign(M.btn,{LT:1}); M.satellites('l');               // x sonorizado = j
+t('↖ + LT (j): vira g', texto('lsat'), ['roll ↗','g']);
 
 console.log('\n— satélites: variante B (líquida é ROLL) —');
 Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
@@ -168,10 +168,11 @@ M.commit();
 t('sílaba boa vira 1 evento', tipos(), ['silaba']);
 t('registra o que saiu', JSON.stringify(M.tele.eventos.at(-1).saiu), ['pa']);
 
-// coda -r é só coda -r agora: LB não disputa com a líquida, então nada a relatar
+// coda -r é só coda -r agora: LB não disputa com a líquida nem com o
+// vozeamento (que mudou pro LT), então não há nada a relatar
 M.tele.eventos.length = 0;
 M.stick.L.gates=[3]; M.stick.R.gates=[4];
-Object.assign(M.btn,{LB:1,LT:0,RB:1,RT:0,L3:0,R3:0});
+Object.assign(M.btn,{LB:1,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.commit();
 t('coda -r não gera nem ambiguidade', tipos(), ['silaba']);
 t('nem conflito',
@@ -191,6 +192,15 @@ M.stick.L.gates=[]; M.stick.R.gates=[];
 Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0});
 M.commit();
 t('commit sem nada vira "vazio"', tipos(), ['vazio']);
+
+// o mesmo analógico parado, com L3, NÃO é nada: é o ⟨h⟩. O combo era morto e
+// agora tem alvo, então não pode mais cair no ramo do "vazio".
+M.tele.eventos.length = 0;
+M.setWord(''); M.stick.L.gates=[]; M.stick.R.gates=[4];
+Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:1,R3:0});
+M.commit();
+t('L3 com analógico parado = h', JSON.stringify(M.tele.eventos.at(-1).saiu), ['ha']);
+t('e não é "vazio"', tipos(), ['silaba']);
 
 M.tele.pads.length = 0;
 M.tlogPad({id:'Fake Pad', mapping:'', buttons:new Array(11), axes:[0,0,0,0,0,0,0,0,0,1.29]});

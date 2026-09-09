@@ -275,10 +275,24 @@ function rollLiquid(){
 
 function buildOnset(){
   const gs = stick.L.gates;
-  if(!gs.length) return {c:'',respell:false};
+  // ⟨h⟩ spells no phoneme and only ever occurs word-initially with no
+  // consonant — "hoje" is ∅+o, and nh/lh/ch are digraphs the roll already
+  // owns. So its address is the one combination the design was throwing away:
+  // L3 with the left stick AT REST, which this function used to ignore
+  // outright. 1,02% of tokens (há, homem, hoje, hora, história) for a slot
+  // that cost nothing — the fonotactic-hole trick, applied to the BUTTONS.
+  // A stick click only fights the gate when the stick is deflected; here it is
+  // centred, so this is the one place where clicking L3 is free.
+  if(!gs.length) return {c: btn.L3 ? 'h' : '', respell:false};
   const mk = landmarks(gs);
   let base = ONSET_BY_GATE[mk[0]];
-  if(btn.L3) base = VOICED[base];
+  // Voicing lives on LT. Measured over two sessions L3 was in 24-28% of the
+  // syllables — the second most pressed button — while LT sat at 0% and LB at
+  // 4%. The load was on the stick click, which is exactly the press that
+  // distorts the gate being pressed. Safe only because the coda type left LT
+  // first: a modifier that means one thing in the onset and another in the
+  // coda is what killed variant B.
+  if(btn.LT) base = VOICED[base];
 
   // Rolling the onset to ↗ asks for the other spelling. The consonants that
   // need one (s, x, j) are exactly the ones that take no liquid in Portuguese,
@@ -287,7 +301,7 @@ function buildOnset(){
   const respell = mk.length>1 && mk[mk.length-1]===RESPELL_GATE
                   && mk[0]!==RESPELL_GATE && !!RESPELL[base];
 
-  // The liquid lives on the roll and NOWHERE else, so LB/LT are free to qualify
+  // The liquid lives on the roll and NOWHERE else, so LB/RB are free to spell
   // the coda and nothing is ever shared. That is the whole design: a modifier
   // that means one thing in the onset and another in the coda eventually
   // collides, no matter how the collision is arranged. Three earlier layouts
@@ -327,9 +341,22 @@ function buildNucleus(){
   return {v,nasal};
 }
 
+// The three oral codas of Portuguese (/S R l/ — /N/ is a feature of the
+// nucleus and lives on R3) are exactly two bits, so they get two bits: LB and
+// RB, ordered by frequency. Measured: /S/ 16,72% of tokens, /R/ 10,81%,
+// /l/ 3,06%. The old layout charged RB+one bumper for both /R/ and /l/ even
+// though one is 3,5x the other; here only the rarest pays two fingers.
+// Honest about the cost: LB+RB = l is a 2-bit CODE, not a composition — read
+// compositionally, LB(r)+RB(s) "should" be the complex coda /rs/. That coda
+// dies here, and it is the right thing to spend: 0,0279% of tokens, and the
+// forms are marshall, rogers, porsche, brothers — "perspectiva" is nearly the
+// only Portuguese word in the list. /ns/ (0,318%: alguns, monstro) is
+// untouched, because nasality was never a coda gate to begin with.
 function buildCoda(){
-  if(!btn.RB) return '';
-  return btn.LB ? 'r' : btn.LT ? 'l' : 's';
+  if(btn.LB && btn.RB) return 'l';
+  if(btn.LB) return 'r';
+  if(btn.RB) return 's';
+  return '';
 }
 
 function current(){
@@ -359,6 +386,15 @@ function orthograph(prevWord, syl){
     // /k/ and /g/ need a mute u before front vowels
     if(onset==='c' && front) onset='qu';
     if(onset==='g' && front) onset='gu';
+    // /kw/ before a/o is written ⟨qu⟩: 0,667% of tokens (quando, qual, quanto,
+    // qualquer, enquanto, quase, quarto) against 0,0036% for ⟨cua/cuo⟩, and
+    // those are hiatus at a morpheme boundary (recuar, evacuação, vácuo), not
+    // /kw/. The u here comes from the NUCLEUS, so the onset drops to a bare q.
+    // It stops at a/o on purpose: before e/i the spelling is genuinely
+    // contested — cuidado, cuidar, cueca are 0,0705% — and a wider rule would
+    // write "quidado". ⟨g⟩ needs nothing: g+u+a already spells "gua" (água,
+    // língua, guarda). Measured, tools/corpus.mjs.
+    if(onset==='c' && /^u[aáoó]/.test(vowel)) onset='q';
     // intervocalic /s/ doubles — a bare s between vowels already reads /z/.
     // Needs a vowel on BOTH sides: "atlas" ends in a bare s, not "atlass".
     if(onset==='s' && afterVowel && vowel) onset='ss';
@@ -526,7 +562,7 @@ const satCache = {l:'',r:''};
 function satellites(side){
   const S = stick[side==='l'?'L':'R'];
   const g = S.gates.length ? S.gates[0] : null;
-  const voiced = btn.L3, nasal = btn.R3;
+  const voiced = btn.LT, nasal = btn.R3;
   const chave = [side,g,voiced,nasal,btn.LB,btn.LT,btn.RB].join(',');
   if(chave===satCache[side]) return;
   satCache[side] = chave;
@@ -543,7 +579,7 @@ function satellites(side){
     const base = ONSET_BY_GATE[g];
     const b = voiced ? VOICED[base] : base;
     const liga = (p) => DIGRAPH[p] || p;
-    itens.push([0,-32, 'L3', VOICED[base], !!voiced]);
+    itens.push([0,-32, 'LT', VOICED[base], !!voiced]);
     const vale = p => DIGRAPH[p] || (clusterOk(p[0],p[1]) ? p : null);
     if(vale(b+'r')) itens.push([54,20,  'roll →', liga(b+'r'), rollLiquid()==='r']);
     if(vale(b+'l')) itens.push([-54,20, 'roll ←', liga(b+'l'), rollLiquid()==='l']);
@@ -708,12 +744,13 @@ function escapeHtml(t){return t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>'
 const BINDS = [['analógico esq.','ataque (8 direções)'],
      ['roll do esq. →','+r   pr, gr, tr   ·   nr→nh'],
      ['roll do esq. ←','+l   pl, cl, fl   ·   lr→lh'],
-     ['L3','sonoriza  t→d  s→z  c→g'],['R3','nasaliza  a→ã  o→õ'],
+     ['LT','sonoriza  t→d  s→z  c→g'],['R3','nasaliza  a→ã  o→õ'],
+     ['L3 (analógico parado)','h   hoje, homem, história'],
      ['analógico dir.','núcleo (8 direções)'],['roll no dir.','ditongo  a→i = ai'],
-     ['RB','coda -s'],['RB + LB','coda -r'],['RB + LT','coda -l'],
+     ['RB','coda -s'],['LB','coda -r'],['LB + RB','coda -l'],
      ['RT','confirma a sílaba'],
-     ['','a líquida SÓ mora no roll, então LB/LT nunca'],
-     ['','disputam com a coda — nada é compartilhado'],
+     ['','a líquida SÓ mora no roll, então LB/RB nunca'],
+     ['','disputam com o vozeamento — nada é compartilhado'],
      ['','e por isso alcança as 280 formas do desenho'],
      ['— grafia —',''],
      ['roll do esq. até ↗','grafa com a letra de ↗'],
@@ -744,7 +781,17 @@ const face = {A:0,B:0,X:0,Y:0,heldB:0,nextB:0,apagados:0};
 const B_ESPERA = 400, B_LETRA = 90, B_PALAVRA = 220, B_VIRA_PALAVRA = 1200;
 function atRest(){ return stick.L.live===null && stick.R.live===null; }
 
-function apagaUm(){ if(word) word=word.slice(0,-1); else text=text.slice(0,-1); }
+// Deletes what the user SEES. The buffer carries the /N/ archiphoneme, which
+// has no glyph of its own: "questão" is "questauN" in the raw buffer, so the
+// old slice ate the invisible N and turned "ão" into "au" — a press that
+// corrupts the word instead of deleting from it. Resolving the buffer first
+// re-anchors it on the visible text. Caught in the 09/09 log: four presses and
+// a full retype to arrive at the same word. A key that finds no target has to
+// say so; one that silently hits the wrong target is worse.
+function apagaUm(){
+  if(word) word = finish(word).slice(0,-1);
+  else text = text.slice(0,-1);
+}
 
 function endWord(suffix){
   // Log even with an empty buffer: pontuação sozinha também é entrada, e sem

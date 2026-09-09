@@ -742,14 +742,143 @@ matou a B, a menos que o tipo da coda vá para outro lugar antes.
 
 ---
 
+## 13. Quinta sessão (09/09, 01h50) — o rearranjo por frequência, decidido
+
+**A sessão é uma mensagem.** 82 sílabas, 35 palavras, 6 minutos, e o texto
+digitado é um pedido de features escrito com a própria ferramenta:
+
+> *olá, claude! precisamos de agá para palavras como oje. precisamos de
+> maiúsculas também. pontuação como parênteses e aspas podem começar a entrar na
+> conversa também. e a questão do modificador tbm. te esplico em chat.*
+
+Os erros do texto **são** a lista de pendências: `oje` sem h, tudo minúsculo,
+`esplico` porque ⟨x⟩ com valor /s/ não tem endereço.
+
+### Medição, e o que ela confirma
+
+**2,24 char/gesto** (contra 2,15 da sessão anterior), 13,4 sílabas/min, **zero
+conflito** de novo. Contagem de botões nas 82 sílabas:
+
+| botão | sílabas | |
+|---|---|---|
+| RT | 100% | commit |
+| **L3** | **24,4%** | vozeamento |
+| R3 | 17,1% | nasalização |
+| RB | 14,6% | coda |
+| LB | 4,9% | tipo da coda |
+| **LT** | **0%** | tipo da coda — não foi tocado uma vez |
+
+Duas sessões independentes, mesma conclusão: **o modificador mais frequente
+morava no clique de analógico e os bumpers estavam ociosos.**
+
+### A proposta do Caio, e por que ela fecha
+
+> *"e se RB for -s, como já é, LB for -r e LB + RB for -l? Aí LT sobra pra ficar
+> como vozeador do ataque."*
+
+Isto satisfaz exatamente a condição que a §12 tinha deixado em aberto — mover o
+vozeamento para o LT só é seguro **se o tipo da coda sair de lá antes**. Sai.
+Depois da troca, `LB`/`RB` são só coda e `LT` é só vozeamento: nada
+compartilhado, nenhuma sílaba impossível, a variante B não volta.
+
+E o custo passa a ser **monotônico com a frequência pela primeira vez**:
+
+| coda | tokens | antes | agora |
+|---|---|---|---|
+| /S/ | 16,72% | RB | RB |
+| /R/ | 10,81% | RB+LB | **LB** |
+| /l/ | 3,06% | RB+LT | LB+RB |
+
+Antes, /R/ e /l/ custavam o mesmo sendo um 3,5× o outro. **Um botão a menos em
+10,8% dos tokens**, e a carga de clique de analógico cai de 41,5% para ~18%
+(só o R3) — previsão falsificável para a próxima sessão.
+
+### O que isso custa, dito por extenso
+
+1. **O /rs/ morre.** `LB+RB` era o último endereço livre do espaço de coda.
+   Remedido com o critério certo — só conta se o `s` também estiver na coda,
+   porque *conversar* é con·ver·sar, coda + ataque, não coda complexa — dá
+   **0,0279%**, e as formas do topo são `marshall, rogers, rangers, porsche,
+   sanders, brothers`. "perspectiva" (5.600 tokens) é quase a única palavra
+   portuguesa da lista. /ns/ (0,318%) continua de graça porque a nasalidade é
+   traço do núcleo. Vale gastar.
+2. **`LB+RB` = `l` é um código, não uma composição.** Lido composicionalmente,
+   LB(r) + RB(s) "deveria" dar /rs/. Não dá. É honesto chamar de código de 2
+   bits — as codas orais do português são exatamente três, então dois bits é o
+   tamanho certo do endereço — mas é a mesma arbitrariedade que incomodou na
+   rodada dos sibilantes, e fingir que é regra seria pior.
+3. **`LB+LT` vira acorde do mesmo dedo.** Ataque vozeado + coda -r pede os dois
+   juntos, e isso cai em **2,74% dos tokens** (`fazer, dizer, ver, saber, dar,
+   ajudar, pegar`) — todo infinitivo de raiz vozeada. Mais 0,59% com RB junto
+   (`voltar, legal, possível`). O trade é −1 entrada e +1 acorde de mesmo dedo;
+   o desenho já assumia LB+LT viável (o limpa-tudo é LB+LT+B). **É a única coisa
+   aqui que aritmética não decide — só a mão.**
+
+### O ⟨h⟩ mora no combo que estava morto
+
+`buildOnset` retornava cedo com o analógico esquerdo em repouso, então **L3 com
+o stick parado era ignorado**: um combo morto. E ⟨h⟩ é precisamente um ataque
+vazio ("hoje" é ∅+o; nh/lh/ch são digrafos que o roll já resolve). Então o `h`
+não gasta o L3 — preenche buraco, que é o princípio do §5 aplicado ao espaço dos
+**botões** em vez do de clusters. Custo medido: **1,02% dos tokens** (`há`
+794k, homem, hoje, hora, história).
+
+De brinde, a ergonomia fecha: clique de analógico só briga com o gate quando o
+stick está defletido. Aqui ele está centrado. O `h` foi parar no único lugar
+onde clicar o L3 é de graça — e **L3 defletido continua livre**, então o layout
+termina com um canal a mais, não a menos.
+
+### O `qu` antes de A é regra, não endereço
+
+Ele levantou "estamos sem QU antes de A". Medido:
+
+| | tokens | formas | |
+|---|---|---|---|
+| ⟨qua/quo⟩ | **0,6665%** | 126 | quando, qual, quanto, qualquer, enquanto, quase, quarto, quatro |
+| ⟨cua/cuo⟩ | 0,0036% | 17 | recuar, evacuação, vácuo — hiato de fronteira de morfema, não /kw/ |
+
+185× de diferença: é uma linha do ortografador, irmã do `c+e→que` que já
+existia. O `u` vem do **núcleo**, então o ataque cai para um `q` pelado.
+
+**O escopo tem que parar em a/o.** ⟨cui/cue⟩ dá 0,0705% e é frequentíssimo em
+forma (`cuidado` 110k, `cuidar` 60k): uma regra mais larga escreveria
+"quidado". Antes de e/i a grafia é genuinamente disputada — ali sim precisaria
+de endereço. E o ⟨g⟩ não precisa de nada: `g+u+a` já soletra "gua" (água,
+língua, guarda).
+
+Aplicada a peneira do §12 item 6, portanto: **derivável por regra → não gasta
+slot.**
+
+### O bug que o log pegou: o backspace comia um caractere invisível
+
+O buffer carrega o arquifonema `/N/`, que não tem glifo: "questão" é `questauN`
+cru contra `questão` na tela. Um backspace apagava o `N` — e a palavra virava
+**"questau"**. Uma tecla que corrompe em vez de apagar.
+
+No log, 01:54:54: quatro apagamentos até voltar a `ques`, redigitou o **mesmo
+gesto** e saiu idêntico. ~20 segundos num no-op. Em nasal simples não aparecia
+(`poteN` → `potem` é 1:1), por isso passou batido nas quatro sessões anteriores.
+
+Corrigido resolvendo o buffer **antes** de fatiar: apaga-se o que se vê. É a
+mesma regra do §10 vista do outro lado — *falha silenciosa em input method vira
+tentativa repetida*, e ali era tecla sem alvo, aqui é tecla com o alvo errado.
+
+---
+
 **Em aberto:**
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
    provado como canal viável; a pergunta é se a líquida deve migrar para ele, e
    com o que qualificar a coda depois disso.
-3. Onde vão maiúscula e o modo letra-a-letra, que eram X e Y.
-4. Labialização no ataque (`qu`/`gu` + ditongo → Uruguai, quais).
-5. Resto da pontuação (vírgula, dois-pontos, aspas).
+3. Onde vão maiúscula e o modo letra-a-letra, que eram X e Y. **Pedido
+   explícito na sessão de 09/09**, junto com parênteses e aspas — e há espaço
+   de sobra fora da sílaba (os combos de LB/LT com as faces estão livres).
+4. Labialização no ataque: `qu`+a resolvido por regra em 09/09; falta o
+   tritongo (Uruguai, quais) e o /kw/ antes de e/i (frequente, tranquilo).
+5. Resto da pontuação (dois-pontos, aspas, parênteses).
+7. ⟨x⟩ com valor /s/ ou /ks/ (`explico`, `texto`, `próximo`) — apareceu como
+   "esplico" no log de 09/09. `L3` com o analógico **defletido** continua livre
+   e é o candidato óbvio.
 6. Antes de gastar qualquer slot novo, a peneira: **é derivável por regra? → é
    alógrafo de algo que já tem endereço? → tem endereço natural na roda?** Slot
    livre é passivo, não ativo: endereço barato faz gastar tabela onde uma regra

@@ -15,10 +15,15 @@ const M = new Function('performance','document', puro +
 )({now:()=>0},{getElementById:()=>({})});
 
 const S = (o,v,n=false,c='',respell=false) => ({onset:o, vowel:v, nasal:n, coda:c, respell});
+// Layout de botões, num lugar só: a coda é um código de 2 bits em LB/RB e o
+// vozeamento saiu do L3 para o LT. Se isto mudar de novo, muda aqui.
+const BTN = (c='',voiced=false,nasal=false,h=false) => ({
+  LB: c==='r'||c==='l' ? 1:0, RB: c==='s'||c==='l' ? 1:0,
+  LT: voiced?1:0, R3: nasal?1:0, L3: h?1:0 });
 // R(...) = a syllable whose onset came from an actual left-stick roll
 const R = (gates,v,{voiced=false,n=false,c=''}={}) => {
   M.stick.L.gates = gates;
-  Object.assign(M.btn,{LB:c==='r'?1:0, LT:c==='l'?1:0, RB:c?1:0, L3:voiced?1:0, R3:n?1:0});
+  Object.assign(M.btn, BTN(c,voiced,n));
   const o = M.buildOnset();
   return {onset:o.c, respell:o.respell, vowel:v, nasal:n, coda:M.buildCoda()};
 };
@@ -95,7 +100,7 @@ grupo('cluster fonotaticamente ilegal não vira lixo');
 const LIQ = (gate,liq,v,{c=''}={}) => {
   const destino = liq==='r' ? 2 : 6;
   M.stick.L.gates = gate===destino ? [gate] : [gate,destino];
-  Object.assign(M.btn,{LB:c==='r'?1:0, LT:c==='l'?1:0, RB:c?1:0, L3:0, R3:0});
+  Object.assign(M.btn, BTN(c));
   const o=M.buildOnset();
   return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:M.buildCoda()}; };
 t('s roll ← (sl não existe)', P(LIQ(2,'l','a')),  'sa');
@@ -122,11 +127,10 @@ t('trabalho', P(S('tr','a'),S('b','a'),S('lh','o')),  'trabalho');
 
 
 grupo('nada é compartilhado, então nada colide');
-// roll = líquida (e só); L3 sonoriza; R3 nasaliza; RB coda, LB/LT o tipo
+// roll = líquida (e só); LT sonoriza; R3 nasaliza; LB/RB são a coda em 2 bits
 const D = (gates,v,{voiced=false,nasal=false,coda=''}={}) => {
   M.stick.L.gates = gates;
-  Object.assign(M.btn,{LB:coda==='r'?1:0, LT:coda==='l'?1:0, RB:coda?1:0,
-                       L3:voiced?1:0, R3:nasal?1:0});
+  Object.assign(M.btn, BTN(coda,voiced,nasal));
   const o = M.buildOnset();
   return {onset:o.c, respell:o.respell, vowel:v, nasal, coda:M.buildCoda()};
 };
@@ -147,13 +151,73 @@ t('nhos  nh + coda-s',               P(D([4,2],'o',{voiced:true,coda:'s'})), 'nh
 t('grande gr + nasal · d+e',         P(D([1,2],'a',{voiced:true,nasal:true}),S('d','e')), 'grande');
 t('pro   cluster sem coda',          P(D([3,2],'o')),                      'pro');
 t('cebola  re-grafia segue valendo', P(D([2,1],'e'),S('b','o'),S('l','a')), 'cebola');
-console.log('  alcança as 280 formas do desenho — ao custo de L3 e R3');
+console.log('  alcança as 280 formas do desenho — ao custo de LT e R3');
 
 grupo('roll: só primeiro, último e inversões de sentido');
 t('ai  [4,5,6,7]', N([4,5,6,7]), 'ai');
 t('oi  [2,1,0,7]', N([2,1,0,7]), 'oi');
 t('eu  [6,7,0,1]', N([6,7,0,1]), 'eu');
 t('ou  [2,1]',     N([2,1]),     'ou');
+
+grupo('a coda é um código de 2 bits em LB/RB, ordenado por frequência');
+// LB sozinho é -r (10,81% dos tokens): um botão a menos que o layout anterior,
+// que cobrava LB+RB. LB+RB é -l (3,06%), o mais raro dos três, e é aí que o
+// desenho paga dois dedos.
+const CODA = (btns,v='a',gate=0) => { M.stick.L.gates=[gate];
+  Object.assign(M.btn,{LB:0,LT:0,RB:0,L3:0,R3:0},btns);
+  const o=M.buildOnset();
+  return {onset:o.c,respell:o.respell,vowel:v,nasal:false,coda:M.buildCoda()}; };
+t('RB sozinho      → -s', P(CODA({RB:1})), 'tas');
+t('LB sozinho      → -r', P(CODA({LB:1})), 'tar');
+t('LB+RB           → -l', P(CODA({LB:1,RB:1})), 'tal');
+t('nenhum dos dois → sem coda', P(CODA({})), 'ta');
+// o acorde caro de verdade: ataque vozeado + coda -r pede LB e LT juntos, o
+// mesmo dedo. 2,74% dos tokens (fazer, dizer, dar, saber) — medido, é o único
+// custo ergonômico do rearranjo.
+t('dar   LT vozeia + LB coda-r', P(CODA({LT:1,LB:1})), 'dar');
+t('voltar  vol (LB+RB) · tar (LB)',
+  P(CODA({LT:1,LB:1,RB:1},'o',5), CODA({LB:1},'a',0)), 'voltar');
+
+grupo('⟨h⟩ mora no combo que estava morto: L3 com o analógico parado');
+const H = (v,{n=false,c=''}={}) => { M.stick.L.gates=[];
+  Object.assign(M.btn, BTN(c,false,n,true));
+  const o=M.buildOnset();
+  return {onset:o.c,respell:o.respell,vowel:v,nasal:n,coda:M.buildCoda()}; };
+const SEM_H = (v) => { M.stick.L.gates=[]; Object.assign(M.btn, BTN());
+  const o=M.buildOnset(); return {onset:o.c,respell:false,vowel:v,nasal:false,coda:''}; };
+t('hoje',    P(H('o'),S('j','e')),            'hoje');
+t('homem',   P(H('o'),S('m','e',true)),       'homem');
+t('hora',    P(H('o'),S('r','a')),            'hora');
+t('há',      P(H('a')),                       'ha');   // o acento é d-pad
+t('hospital  h + coda-s', P(H('o',{c:'s'}),S('p','i'),S('t','a',false,'l')), 'hospital');
+t('sem L3 o ataque segue vazio', P(SEM_H('o'),S('j','e')), 'oje');
+
+grupo('/kw/ antes de a/o é regra, não endereço');
+// c + núcleo "ua": o u vem do NÚCLEO, então o ataque cai pra q
+t('quando  c+ua nasal · d+o', P(S('c','ua',true),S('d','o')),  'quando');
+t('qual    c+ua + coda-l',    P(S('c','ua',false,'l')),        'qual');
+t('quarto  c+ua+coda-r · t+o',P(S('c','ua',false,'r'),S('t','o')), 'quarto');
+t('quatro  c+ua · tr+o',      P(S('c','ua'),S('tr','o')),      'quatro');
+// "quase" é /kwazi/: o ataque é o z (LT), que intervocálico grafa ⟨s⟩ — e é
+// isso que separa "quase" de "assado", onde o /s/ dobra.
+t('quase   c+ua · z+e → ⟨s⟩', P(S('c','ua'),S('z','e')),       'quase');
+t('quassa  c+ua · s+a → ⟨ss⟩',P(S('c','ua'),S('s','a')),       'quassa');
+// e o que a regra NÃO pode pegar, senão vira "quidado"
+t('cuidado c+ui (fica ⟨cu⟩)', P(S('c','ui'),S('d','a'),S('d','o')), 'cuidado');
+t('curso   c+u simples',      P(S('c','u',false,'r'),S('s','o')),   'curso');
+t('cuca    c+u · c+a',        P(S('c','u'),S('c','a')),             'cuca');
+t('que     c+e segue virando qu', P(S('c','e')),                    'que');
+t('água    ∅+a · g+ua',       P(S('','a'),S('g','ua')),             'agua');
+
+grupo('backspace apaga o que se VÊ, não o buffer cru');
+// o /N/ não tem glifo: "questão" é "questauN" cru. Uma tecla que come o N
+// reescreve "ão" como "au" — foi o que custou 20s no log de 09/09.
+const apaga = (raw,n=1) => { let w=raw; for(let i=0;i<n;i++) w=M.finish(w).slice(0,-1); return M.finish(w); };
+t('questão  −1', apaga('questauN'),  'questã');
+t('questão  −2', apaga('questauN',2),'quest');
+t('potem    −1', apaga('poteN'),     'pote');
+t('irmãs    −1', apaga('irmaNs'),    'irmã');
+t('campo    −1', apaga('caNpo'),     'camp');
 
 console.log(`\n${ok} ok, ${bad} falha(s)`);
 process.exit(bad ? 1 : 0);

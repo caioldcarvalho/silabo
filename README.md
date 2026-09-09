@@ -69,6 +69,7 @@ Sem controle, dá para testar no teclado:
 | `I J K L` + `U O M .` | analógico direito — **núcleo** |
 | `Espaço` | confirma a sílaba (RT) |
 | `1` `2` `3` `4` `5` | LB, LT, RB, L3, R3 |
+| `2` (LT) · `4` (L3) | sonoriza · **h** (com o analógico parado) |
 | `Enter` · `Backspace` | fecha a palavra · apaga |
 | `←` `→` · `↓` | cicla acento · cicla sibilante |
 
@@ -78,15 +79,17 @@ Sem controle, dá para testar no teclado:
 
 ### Ataque — analógico esquerdo
 
-As consoantes mais frequentes do português nas quatro cardinais; **L3**
+As consoantes mais frequentes do português nas quatro cardinais; **LT**
 sonoriza, dando o par:
 
 | | ↑ | → | ↓ | ← | ↗ | ↘ | ↙ | ↖ |
 |---|---|---|---|---|---|---|---|---|
 | **base** | t | s | m | l | c | p | f | x |
-| **+ L3** | d | z | n | r | g | b | v | j |
+| **+ LT** | d | z | n | r | g | b | v | j |
 
-Analógico em repouso = **ataque zero** (sílaba que começa com vogal).
+Analógico em repouso = **ataque zero** (sílaba que começa com vogal) — e
+**repouso + `L3`** é o **h** mudo (*hoje*, *homem*, *história*), que não é som
+nenhum e por isso mora justamente na combinação que o desenho descartava.
 
 **Deslizar compõe.** Rolar o analógico até `→` acrescenta um **r**, até `←`
 acrescenta um **l** — `p`→`→` dá "pr", `c`→`←` dá "cl". Onde o cluster é
@@ -116,7 +119,17 @@ discreto, sem cronômetro.
 
 ### Coda
 
-`RB` = **-s** (plural) · `RB`+`LB` = **-r** (todos os infinitivos) · `RB`+`LT` = **-l**
+Dois bits em `LB`/`RB`, ordenados por frequência de token — as codas orais do
+português são exatamente três, e só a mais rara paga dois dedos:
+
+| gesto | coda | tokens |
+|---|---|---|
+| `RB` | **-s** (plural) | 16,7% |
+| `LB` | **-r** (todos os infinitivos) | 10,8% |
+| `LB`+`RB` | **-l** | 3,1% |
+
+A nasal não está aqui: ela é traço do **núcleo** e mora no `R3`, que é o que faz
+*sons*, *alguns* e *monstro* saírem sem coda complexa nenhuma.
 
 ---
 
@@ -199,19 +212,25 @@ motivo:
 
 > Um modificador que significa uma coisa no ataque e outra na coda mais cedo ou
 > mais tarde colide. A saída foi dar à líquida um endereço que só é dela — o
-> roll — e deixar `LB`/`LT` livres para a coda. **Nada é compartilhado, então
+> roll — e deixar `LB`/`RB` livres para a coda. **Nada é compartilhado, então
 > nada colide:** as 280 formas de sílaba que o desenho promete são alcançáveis.
 
-Medido em sessão real: **0 conflitos**, 12% de sílabas corrigidas, 2,15
-caracteres por gesto.
+Medido em duas sessões reais: **0 conflitos**, 2,15 e depois 2,24 caracteres por
+gesto. A segunda sessão também mediu a *carga* de cada botão e reorganizou o
+layout por ela: o vozeamento estava em 24–28% das sílabas morando no clique do
+analógico, enquanto os dois bumpers ficavam em 4% e 0%. Trocar de lugar derruba
+o clique de analógico de 41% das sílabas para 18%.
 
 **Lacunas conhecidas**, deliberadamente explícitas em vez de meio-resolvidas:
 
 - `x` vs `ch` ainda é decisão não tomada
 - tritongo (`Uruguai`, `quais`) provavelmente pede labialização no ataque, não
   tritongo no núcleo
-- `k`, `w`, `y` e `h` não têm endereço — o gate `—` do núcleo é redundante com o
-  repouso e é o candidato natural
+- `k`, `w` e `y` não têm endereço — o gate `—` do núcleo é redundante com o
+  repouso e é o candidato natural (o `h` já saiu daqui: mora no `L3` com o
+  analógico parado)
+- `x` com valor /s/ ou /ks/ (*explico*, *texto*, *próximo*) ainda sai como `s`
+- maiúsculas, parênteses e aspas ainda não existem
 - plural de `-ão` é lexical (pães/mãos/ações), então vai sílaba a sílaba
 
 ## Testes e ferramentas
@@ -219,8 +238,8 @@ caracteres por gesto.
 Sem dependências. Só `node`.
 
 ```fish
-node test/motor.test.mjs      # 72 casos — montagem da sílaba e ortografia
-node test/ui.test.mjs         # 45 casos — o que os satélites, o HUD e o log geram
+node test/motor.test.mjs      # 100 casos — montagem da sílaba e ortografia
+node test/ui.test.mjs         # 49 casos — o que os satélites, o HUD e o log geram
 node tools/corpus.mjs         # mede grafias contra corpus real de pt-BR
 node tools/screenshot.mjs     # a página em PNG (--uso, --medir)
 node tools/pad-preview.mjs    # o desenho do controle em PNG
