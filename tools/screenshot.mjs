@@ -17,8 +17,8 @@ const VP   = '1440,900';
 // requestAnimationFrame do poll sobrescreve os botões a cada quadro.
 const SIM = `<script>addEventListener('load',()=>{
   const fix = () => {
-    text = 'eu tô fazendo um projetinho ultra maneiro porquê ';
-    word = 'desmerece';
+    text = ALVO.slice(0, 92);
+    word = 'ca';
     stick.L.gates=[2,1]; stick.R.gates=[4];
     btn.LB=1; held.A=1; axesNow.L=[0.75,-0.62]; axesNow.R=[0,0.95];
     satellites('l'); satellites('r');
@@ -32,7 +32,7 @@ const MEDIR = `<script>addEventListener('load',()=>{setTimeout(()=>{
   const g = s => { const e=document.querySelector(s); if(!e) return null;
     const b=e.getBoundingClientRect();
     return Math.round(b.width)+'x'+Math.round(b.height)+' @y'+Math.round(b.top+scrollY); };
-  document.title = 'MEDIDAS ' + JSON.stringify({topo:g('.topo'), hud:g('#hud'),
+  document.title = 'MEDIDAS ' + JSON.stringify({hud:g('#hud'), trilha:g('#trilhabox'),
     pad:g('#padsvg'), readout:g('.readout'), stage:g('.stage'), grid:g('.grid'),
     fimDasRodas: Math.round(document.querySelector('.stage').getBoundingClientRect().bottom+scrollY),
     pagina: document.documentElement.scrollHeight}, null, 1);

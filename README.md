@@ -77,6 +77,38 @@ Sem controle, dá para testar no teclado:
 
 ---
 
+## A frase-modelo
+
+A página abre com um **arco de dificuldade** para treinar: nove fases, cada uma
+entrando com um mecanismo e reusando todos os anteriores, então quem chega no fim
+passou por tudo que o desenho sabe fazer.
+
+| | mecanismo | |
+|---|---|---|
+| 1 | sílaba simples | *O sapo pula.* |
+| 2 | vozeamento | *O gato do tio nada.* |
+| 3 | ditongo | *Bia viu o pai e o boi.* |
+| 4 | nasal | *A mãe canta um som bom.* |
+| 5 | coda | *Os dois vão cantar até o sol sumir.* |
+| 6 | cluster | *O prato, o livro e a flor grande ficam na sala.* |
+| 7 | grafia | *A chuva molhou a gente da cidade.* |
+| 8 | h e qu | *Hoje quatro pessoas quase caem.* |
+| 9 | pós-correção | *Você já explicou a próxima "questão" (a de ontem) pra Bia?* |
+
+A trilha compara **texto visível contra texto visível**, nunca gesto contra
+gesto: `ca.mpo` e `cam.po` produzem "campo", então cobrar a divisão silábica
+seria cobrar exatamente a coisa que o desenho declarou irrelevante. Divergir
+**marca e não trava** — erro é anotação, não parede. E a fase é *função da
+posição no texto*, não máquina de estados: não há "concluiu a fase", nada para
+dessincronizar.
+
+`test/frase.test.mjs` prova duas coisas diferentes: que o ortografador produz
+exatamente esse texto a partir das sílabas, e que **cada um dos 25 ataques tem
+um gesto real que o produz**. Sem a segunda, a primeira só diria que a string é
+construível — não que uma mão a alcança.
+
+---
+
 ## O layout
 
 ### Ataque — analógico esquerdo

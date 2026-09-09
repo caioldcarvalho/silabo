@@ -988,6 +988,94 @@ além da borda também. Falha silenciosa vira tentativa repetida (§10).
 
 ---
 
+## 16. A página foi rearranjada por diagnóstico, não por gosto (09/09)
+
+Pedido dele: a frase-modelo na tela, e um parecer de UI porque a página estava
+ficando bagunçada. O parecer veio de um agente com o repositório na mão, e os
+achados verificáveis foram todos conferidos antes de aplicar.
+
+**O diagnóstico que reenquadrou:** o corte certo não é *aprendendo × digitando*,
+que obrigaria a manter dois layouts e um modo — é **taxa de atualização**. Tier
+1 muda a cada quadro (texto, sílaba, pad, rodas, trilha) e fica sempre na tela;
+tier 2 nunca muda (a tabela) e pode sair do caminho; tier 3 é pós-sessão
+(métrica detalhada, log, botões destrutivos). As rodas são tier 1, não material
+de estudo: o ponto aceso e os satélites são feedback ao vivo.
+
+**Os quatro defeitos concretos:**
+
+1. **O maior elemento da página não continha nada.** O card *Medição* tinha
+   ~250px de conteúdo esticados para 1614px pelo `align:stretch`, porque a
+   tabela ao lado cresceu. Borda em volta de vazio lê como falha de
+   carregamento. As quatro métricas viraram **uma linha mono no header** e o
+   card morreu: número que se olha de canto de olho não precisa de 26px e
+   legenda — aquilo é estética de dashboard, para número que se consulta uma vez.
+2. **`td.k{width:44%}`** dava 338px para chaves de 2 a 14 caracteres e espremia
+   a coluna de valor, que é frase inteira. A tabela tinha 1600px **por quebra de
+   linha, não por conteúdo**. `width:1%` foi a maior economia da página inteira.
+3. **Três níveis semânticos, um nível visual.** Título, binding e
+   *justificativa* estavam todos na mesma tabela — a prosa ("nada é
+   compartilhado…") ficava na coluna de valor, indistinguível de um atalho cuja
+   tecla você não conseguiu ler, e os separadores eram linhas falsas com estilo
+   de tecla, então um título parecia um botão.
+4. **A sílaba no ar estava a ~200px do cursor, na diagonal** — uma sacada por
+   sílaba, e o olho caía primeiro no texto, que tem mais massa.
+
+**A mudança que mais rende, e é a menos original:** a sílaba no ar virou
+**pré-edição sublinhada no próprio cursor**, que é literalmente a *composition
+string* de qualquer IME — japonês, chinês, coreano. O campo de 30px sumiu e a
+palavra passa a crescer na frente de quem digita. O desenho anterior é que era o
+incomum.
+
+Também: decomposição e aviso deixaram de dividir a mesma linha. Um é estado
+persistente, o outro dura 1,6s — **e o aviso apagava o estado enquanto durava**,
+o que contradizia o §10 (o aviso existia, mas no canal errado). Um canal por
+tempo de vida, altura reservada nos dois.
+
+**Medido, antes e depois:**
+
+| | antes | depois |
+|---|---|---|
+| altura da página | 2373px | **1433px** |
+| fim das rodas (o que importa pra digitar) | ~970px | **685px** |
+| margem horizontal morta | 268px | 80px |
+
+685px cabe nos ~830px úteis de um notebook 1440×900: **a região de digitação
+não rola.**
+
+### A trilha
+
+Mora dentro do `.readout`, sem card e sem borda, em 60px: rótulo com a fase,
+uma linha de janela deslizante que **nunca quebra e nunca cresce**, e uma régua
+de nove segmentos. Vazia, some inteira e a página volta a ser a de antes.
+
+Duas decisões de desenho que valem além dela:
+
+- **Compara texto visível contra texto visível.** Comparar segmentação seria
+  cobrar a coisa que o README declara irrelevante (`ca.mpo` = `cam.po`).
+- **A fase é `f(posição)`**, não máquina de estados. Sem avanço, sem "concluiu",
+  nada para dessincronizar — o mesmo argumento do §14 e da maiúscula-por-regra.
+
+Ganho de brinde: divergências por fase é **taxa de erro por classe fonológica**
+(cluster, coda, grafia), que é a métrica que faltava — o `corpus.mjs` mede a
+língua, não quem digita.
+
+### Não aplicado, e por quê
+
+A proposta trazia uma **folha lateral sobreposta** para a tabela, aberta pelo
+botão **Back** (que está de fato sem mapeamento — conferido). Ficou de fora
+porque o passo 1 sozinho pode já ter bastado: a tabela cabe em três colunas
+agora. Medir uma sessão antes de construir sobreposição é mais barato que
+desconstruir depois.
+
+**E um achado fora do escopo, que é um defeito real:** o `index.html` carrega
+**três `<link>` do Google Fonts**. O "arquivo único, zero dependências" que o
+README promete já está furado hoje, e a página muda de aparência offline.
+Não mexi porque tipografia é decisão de gosto.
+
+**Estado:** 100 no motor, 96 na UI, 13 na frase.
+
+---
+
 **Em aberto:**
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
