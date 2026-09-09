@@ -19,7 +19,7 @@ const doc = {getElementById:id=>(nos[id]||={innerHTML:'',textContent:'',setAttri
 const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo+`return {poeSilaba, endWord, delimita, cycleAccent, toggleSibilant, cycleCaps,
-                 buildOnset, stick, btn, FRASE_MODELO, RESPELL, RESPELL_GATE,
+                 buildOnset, stick, btn, FRASE_MODELO, TRILHAS, RESPELL, RESPELL_GATE,
                  setWord:w=>{word=w}, getWord:()=>word,
                  setText:t=>{text=t}, getText:()=>text, setDepois:d=>{depois=d}};`
 )({now:()=>0},doc,()=>{},{getGamepads:()=>[],userAgent:'teste'},()=>{},
@@ -91,6 +91,24 @@ FASES.forEach((rodar,i)=>{
   M.setText(''); M.setWord(''); M.setDepois('');
   rodar();
   t(`${i+1}. ${M.FRASE_MODELO[i].mec}`, M.getText().trim(), M.FRASE_MODELO[i].texto);
+});
+
+grupo('a trilha curta também sai exatamente como está escrita');
+// mesma prova, na volta de aquecimento — 54 caracteres em vez de 283
+const CURTA = [
+  () => { P([S('','o','s')]); P([S('d','oi','s')]); P([S('c','ai','ns')]);
+          P([S('b','e'),S('b','e'),S('r','a','n')],{fim:'.'}); },
+  () => { P([S('x','a','R')],{acc:1}); P([S('c','e','n'),S('t','e')]);
+          P([S('h','o'),S('j','e')],{fim:'.'}); },
+  () => { P([S('','o')]); P([S('l','i'),S('vr','o')]);
+          P([S('gr','a','n'),S('d','e')],{fim:'.'}); }
+];
+t('a curta tem 3 fases', String(M.TRILHAS.curta.fases.length), '3');
+CURTA.forEach((rodar,i)=>{
+  M.setText(''); M.setWord(''); M.setDepois('');
+  rodar();
+  t(`curta ${i+1}. ${M.TRILHAS.curta.fases[i].mec}`, M.getText().trim(),
+    M.TRILHAS.curta.fases[i].texto);
 });
 
 grupo('e todo ataque da frase tem um gesto que o produz');

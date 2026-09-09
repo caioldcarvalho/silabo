@@ -117,8 +117,15 @@ svg{display:block;width:100%;height:auto}
 #regua i.agora{background:var(--line);box-shadow:0 0 0 1px var(--right)}
 #regua i.agora b{display:block;height:100%;background:var(--right)}
 .trilha-off #trilhabox{display:none}
-#alvo{font-family:inherit;font-size:11px;background:transparent;color:var(--muted);
-  border:1px solid var(--line);border-radius:2px;padding:2px 8px;cursor:pointer;margin-left:8px}
+#trocar{margin-left:10px}
+#trocar button{font-family:inherit;font-size:11px;background:transparent;color:var(--muted);
+  border:1px solid var(--line);border-radius:2px;padding:2px 8px;cursor:pointer;margin-left:4px}
+#trocar button.on{color:var(--ink);border-color:var(--muted)}
+#trocar button:focus-visible{outline:2px solid var(--right);outline-offset:2px}
+#colado{display:none;width:100%;margin:8px 0 0;background:var(--bg);color:var(--ink);
+  border:1px solid var(--line);border-radius:2px;padding:8px;resize:vertical;
+  font-family:"IBM Plex Mono",monospace;font-size:13px}
+#colado.on{display:block}
 
 .grid{display:grid;grid-template-columns:1fr;gap:20px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px}
@@ -163,7 +170,8 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
 <div class="readout">
   <div id="trilhabox">
     <div class="rot">frase-modelo <span id="fase"></span>
-      <button id="alvo">digitar livre</button></div>
+      <span id="trocar"><button data-t="longa">longa</button><button data-t="curta">curta</button><button data-t="colar">colar…</button><button data-t="livre">livre</button></span></div>
+    <textarea id="colado" rows="2" placeholder="cole o texto e aperte Enter (Esc cancela)"></textarea>
     <div id="trilha"></div>
     <div id="regua"></div>
   </div>
@@ -511,7 +519,8 @@ function maiuscula(w){ return w.replace(/^([a-zà-ÿ])/, c => c.toUpperCase()); 
 // introduz um mecanismo e reusa todos os anteriores, então quem chega no fim
 // passou por tudo que o desenho sabe fazer. `test/frase.test.mjs` prova que ela
 // é digitável — sílaba por sílaba, e que cada ataque tem um gesto que o produz.
-const FRASE_MODELO = [
+const TRILHAS = {
+ longa: {rotulo:'longa', fases:[
  {mec:'sílaba simples', dica:'ataque + núcleo, nenhum modificador',
   texto:'O sapo pula.'},
  {mec:'vozeamento',     dica:'LT pareia o ataque: t→d, s→z, c→g',
@@ -529,8 +538,20 @@ const FRASE_MODELO = [
  {mec:'h e qu',         dica:'L3 com o analógico parado · o qu sai por regra',
   texto:'Hoje quatro pessoas quase caem.'},
  {mec:'pós-correção',   dica:'d-pad: acento, sibilante, caixa, e a pontuação',
-  texto:'Você já explicou a próxima "questão" (a de ontem) pra Bia?'}
-];
+  texto:'Você já explicou a próxima "questão" (a de ontem) pra Bia?'}]},
+
+ // Uma volta de aquecimento: mesma ideia de arco, em três fases e 54 caracteres
+ // em vez de 283. Serve pra medir sem comprometer dez minutos.
+ curta: {rotulo:'curta', fases:[
+ {mec:'coda, ditongo e nasal', dica:'RB · roll no direito · R3',
+  texto:'Os dois cães beberam.'},
+ {mec:'grafia, qu e h',        dica:'roll até ↗ · L3 com o analógico parado',
+  texto:'Chá quente hoje.'},
+ {mec:'cluster',               dica:'roll no esquerdo: → = +r',
+  texto:'O livro grande.'}]}
+};
+// o teste da frase lê daqui
+const FRASE_MODELO = TRILHAS.longa.fases;
 
 // O que commit() faz com a sílaba, separado do que ele faz com o gamepad — o
 // teste da frase exercita ESTE caminho, e não uma cópia que pode divergir.
@@ -547,10 +568,29 @@ function poeSilaba(syl){
 // fase é função da posição: fase = f(posição). Sem avanço, sem "concluiu a
 // fase", sem máquina de estados pra dessincronizar — o mesmo argumento que fez
 // a maiúscula de início de frase ser regra em vez de gesto.
-const ALVO = FRASE_MODELO.map(f=>f.texto).join(' ');
-const LIMITES = (()=>{ let i=0;
-  return FRASE_MODELO.map(f=>{ const ini=i; i += f.texto.length+1; return {ini, fim:i-1}; }); })();
+let FASES = TRILHAS.longa.fases;
+let ALVO = '', LIMITES = [];
 let seguindo = true;
+
+// Trocar de trilha é recompor duas coisas: a string alvo e onde cada fase
+// começa. Texto colado é uma trilha de uma fase só — o mecanismo é o mesmo, e
+// por isso não existe um caminho de código separado pra ele.
+// montaTrilha é pura e roda na declaração; carregaTrilha é ela mais o redesenho.
+// Separadas porque renderTrilha pode ser chamado antes do boot — e antes disso
+// LIMITES ficava vazio, o índice da fase dava -1 e a página quebrava.
+function montaTrilha(fases){
+  FASES = fases;
+  ALVO = fases.map(f=>f.texto).join(' ');
+  let i = 0;
+  LIMITES = fases.map(f=>{ const ini=i; i += f.texto.length+1; return {ini, fim:i-1}; });
+}
+function carregaTrilha(fases){ montaTrilha(fases); seguindo = true; render(); }
+montaTrilha(TRILHAS.longa.fases);
+function trilhaColada(txt){
+  txt = txt.replace(/\s+/g,' ').trim();
+  if(!txt) return;
+  carregaTrilha([{mec:'texto colado', dica:`${txt.length} caracteres`, texto:txt}]);
+}
 
 // Compara TEXTO VISÍVEL contra texto visível, nunca gesto contra gesto: o
 // projeto declarou a segmentação irrelevante (ca.mpo e cam.po dão "campo"), então
@@ -591,11 +631,12 @@ function renderTrilha(){
   html += (fim < ALVO.length ? '…' : '');
   document.getElementById('trilha').innerHTML = html;
 
-  let f = LIMITES.findIndex(l => n <= l.fim); if(f < 0) f = LIMITES.length - 1;
+  let f = LIMITES.findIndex(l => n <= l.fim);
+  if(f < 0) f = Math.max(0, LIMITES.length - 1);
   const L = LIMITES[f];
   document.getElementById('fase').innerHTML =
-    `· fase ${f+1}/${FRASE_MODELO.length} — <i>${escapeHtml(FRASE_MODELO[f].mec)}</i>`
-    + ` · ${escapeHtml(FRASE_MODELO[f].dica)}`
+    (FASES.length > 1 ? `· fase ${f+1}/${FASES.length} — ` : '· ')
+    + `<i>${escapeHtml(FASES[f].mec)}</i> · ${escapeHtml(FASES[f].dica)}`
     + (erro ? ' <b>⚠ divergiu do modelo</b>' : '');
   const pct = Math.max(0, Math.min(100, 100*(n - L.ini)/(L.fim - L.ini || 1)));
   document.getElementById('regua').innerHTML = LIMITES.map((_,i)=>
@@ -665,6 +706,15 @@ function gesto(){
 }
 // Logged once per controller, and it is what lets a d-pad problem be diagnosed
 // from the log alone instead of guessed at.
+// Reconexão precisa aparecer no log. O dedupe por id fazia o pad sumir e voltar
+// sem deixar rastro, então uma sessão com mau contato ficava indistinguível de
+// uma sessão limpa — e a queixa "o controle caiu" não tinha como ser medida.
+let padVivo = false;
+function tlogPadEstado(vivo){
+  if(vivo === padVivo) return;
+  padVivo = vivo;
+  tlog('pad', {estado: vivo ? 'conectou' : 'CAIU'});
+}
 function tlogPad(pad){
   if(tele.pads.some(p=>p.id===pad.id)) return;
   tele.pads.push({id:pad.id, mapping:pad.mapping,
@@ -1049,6 +1099,12 @@ function delimita(par){
 // actually take.
 const CICLO = { a:['a','á','â','ã','à'], e:['e','é','ê'], i:['i','í'],
                 o:['o','ó','ô','õ'],     u:['u','ú'] };
+// Os ciclos escrevem letras de tabelas minúsculas. Enquanto não havia caixa no
+// desenho isso era invisível; com o ↑ do d-pad, "ES" virava "Ez" no ciclo da
+// sibilante e "Ex" virava "êx" no do acento — a correção comia a maiúscula.
+// Medido no log de 09/09 15:07, e o Caio leu como erro dele.
+const comoEstava = (novo, velho) =>
+  /[A-ZÀ-Ý]/.test(velho[0]) ? novo[0].toUpperCase() + novo.slice(1) : novo;
 const BASE_DE = {};
 for(const [b,arr] of Object.entries(CICLO)) for(const ch of arr) BASE_DE[ch]=b;
 const dpadPrev = {up:0,down:0,left:0,right:0};
@@ -1075,8 +1131,8 @@ function cycleAccent(dir){
       const arr = CICLO[base];
       const j = arr.indexOf(w[i].toLowerCase());
       const k = (j + dir + arr.length) % arr.length;
-      virou = arr[k];
-      return w.slice(0,i) + arr[k] + w.slice(i+1);
+      virou = comoEstava(arr[k], w[i]);
+      return w.slice(0,i) + virou + w.slice(i+1);
     }
     return null;
   });
@@ -1113,7 +1169,8 @@ function toggleSibilant(){
                 : new RegExp(`^[${V_ACENTO}]`,'i').test(depois) ? ['ss','s','z','x']
                 : ['s','x'];                                 // coda: explicar, exceto
     const j = ciclo.indexOf(atual);
-    virou = j<0 ? ciclo[0] : ciclo[(j + 1) % ciclo.length];
+    virou = comoEstava(j<0 ? ciclo[0] : ciclo[(j + 1) % ciclo.length],
+                       w.slice(i, i + atual.length));
     return w.slice(0,i) + virou + w.slice(i + atual.length);
   });
   return virou;
@@ -1264,7 +1321,9 @@ function poll(){
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   pad = [...pads].find(p=>p);
   const st = document.getElementById('status');
+  tlogPadEstado(!!pad);
   if(pad){ st.textContent = pad.id.slice(0,42); st.className='on'; tlogPad(pad); }
+  else if(st.className==='on'){ st.textContent='controle caiu — aperte um botão'; st.className=''; }
 
   let lx=kb.L[0], ly=kb.L[1], rx=kb.R[0], ry=kb.R[1];
   if(pad){
@@ -1338,9 +1397,25 @@ addEventListener('keyup',e=>{
 });
 
 // ---------------------------------------------------------------- boot
-document.getElementById('alvo').onclick=(e)=>{
-  seguindo=!seguindo; e.target.textContent = seguindo?'digitar livre':'seguir a frase';
-  render(); };
+const cx = document.getElementById('colado');
+function marcaTrilha(qual){
+  document.querySelectorAll('#trocar button').forEach(b=>
+    b.classList.toggle('on', b.dataset.t===qual));
+}
+document.getElementById('trocar').onclick=(e)=>{
+  const q = e.target.dataset && e.target.dataset.t; if(!q) return;
+  cx.classList.remove('on');
+  if(q==='livre'){ seguindo=false; marcaTrilha('livre'); render(); return; }
+  if(q==='colar'){ cx.classList.add('on'); cx.value=''; cx.focus(); marcaTrilha('colar'); return; }
+  carregaTrilha(TRILHAS[q].fases); marcaTrilha(q);
+};
+cx.addEventListener('keydown', e=>{
+  e.stopPropagation();                       // senão as teclas viram sílaba
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault();
+    trilhaColada(cx.value); cx.classList.remove('on'); }
+  if(e.key==='Escape'){ cx.classList.remove('on'); marcaTrilha('longa'); }
+});
+marcaTrilha('longa');
 document.getElementById('rs').onclick=resetMetrics;
 document.getElementById('wipe').onclick=()=>{
   tlog('apaga',{alvo:'tudo',antes:(text+word).slice(-40)}); text=''; word=''; depois=''; render(); };
