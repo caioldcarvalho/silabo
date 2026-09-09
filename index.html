@@ -163,7 +163,8 @@ p.note{font-size:13px;color:var(--muted);margin:16px 0 0}
   </div>
 </div>
 
-<p class="note">Teclado para testar sem controle: <b>W A S D</b> + <b>Q E Z C</b> movem o analógico esquerdo, <b>I J K L</b> + <b>U O M .</b> movem o direito, <b>Espaço</b> confirma a sílaba. <b>1</b> e <b>2</b> são LB e LT, <b>3</b> é RB, <b>4</b> e <b>5</b> são L3 e R3.</p>
+<p class="note">Teclado para testar sem controle: <b>W A S D</b> + <b>Q E Z C</b> movem o analógico esquerdo, <b>I J K L</b> + <b>U O M .</b> movem o direito, <b>Espaço</b> confirma a sílaba. <b>1</b> e <b>2</b> são LB e LT, <b>3</b> é RB, <b>4</b> e <b>5</b> são L3 e R3.
+<b>↑</b> cicla a caixa, <b>↓</b> a sibilante, <b>(</b> e <b>'</b> põem parêntese e aspas.</p>
 
 <script>
 // ---------------------------------------------------------------- gates
@@ -409,9 +410,13 @@ function orthograph(prevWord, syl){
   // Nasality is written as a tilde only before a vowel or at the end of a word;
   // before a consonant Portuguese writes n/m (campo, canta — never "cãpo").
   // Which one it is depends on what comes NEXT, so the tilde is decided later,
-  // in finish(); here the nasal is always carried as a plain /N/ archiphoneme.
+  // in finish(); here the nasal is carried as an archiphoneme.
+  // It is spelled "~" and not "N" because the buffer now holds capitals: with a
+  // letter as the sentinel, "Não" (raw "Nau~") would have its capital eaten by
+  // the very rule that resolves the archiphoneme before a vowel. A sentinel
+  // that cannot be confused with content is worth more than a pretty one.
   let v = vowel;
-  const nasalTail = nasal ? 'N' : '';
+  const nasalTail = nasal ? '~' : '';
 
   let out = prevWord + onset + v + nasalTail + coda;
   return out;
@@ -428,23 +433,32 @@ function finish(w){
     // empty. An address already paid for should not be spent on nothing.
     // nasal diphthongs have dedicated spellings — "ãu" does not exist in
     // Portuguese, it is always written "ão"; same for ãe and õe
-    .replace(/auN/g,'ão').replace(/[aá]iN/g,'ãe').replace(/[oó]iN/g,'õe')
+    .replace(/au~/gi,'ão').replace(/[aá]i~/gi,'ãe').replace(/[oó]i~/gi,'õe')
     // /N/ before p or b → m
-    .replace(/([ãõ])N/g,'$1')          // tilde typed by hand on an already nasal vowel
-    .replace(/N(?=[pb])/g,'m')
+    .replace(/([ãõ])~/gi,'$1')         // tilde typed by hand on an already nasal vowel
+    .replace(/~(?=[pb])/gi,'m')
     // Word-final /aN/ is "am", not "ã": every third-person plural ends there
     // (falam, foram, eram, tinham) — 0,671% of tokens against 0,119% for "ã",
     // measured. The tilde is reachable from the accent cycle, and the rule
     // above absorbs the /N/ when it lands, so "irmam" → cycle → "irmã".
     // Before the plural -s it IS the tilde, because "ams" does not exist and
     // "ãs" does (irmãs, maçãs, manhãs).
-    .replace(/aN(?=s$)/g,'ã')
+    .replace(/a~(?=s$)/gi,'ã')
     // before any other letter it is a plain n (canta, sons, bens)
-    .replace(/N(?=[a-zà-ú])/gi,'n')
+    .replace(/~(?=[a-zà-ÿA-ZÀ-Ý])/g,'n')
     // word-finally it is m (sem, bem, um, com, bom)
-    .replace(/N$/g,'m')
-    .replace(/N/g,'n');
+    .replace(/~$/g,'m')
+    .replace(/~/g,'n');
 }
+
+// Sentence-initial capitals are a RULE, not an address: the text is empty, or
+// the last thing that closed was . ! ? — optionally followed by a closing
+// bracket or quote. Written INTO the buffer, never only onto the screen, so
+// that backspace and the d-pad keep editing the same string the user reads.
+function inicioDeFrase(){
+  return /(^|[.!?]["')\u201d]?)\s*$/.test(text);
+}
+function maiuscula(w){ return w.replace(/^([a-zà-ÿ])/, c => c.toUpperCase()); }
 
 function commit(){
   const syl = current();
@@ -454,6 +468,9 @@ function commit(){
   }
   const before = word;
   word = orthograph(word, syl);
+  // Multi-letter onsets capitalise correctly on their own: "qu"→"Qu" (Quando),
+  // "ch"→"Ch" (Chave), "nh"→"Nh". Nothing to special-case.
+  if(!before && inicioDeFrase()) word = maiuscula(word);
   const gained = word.length - before.length;
   if(gained>0){ m.c += gained; }
   m.g++;
@@ -758,12 +775,16 @@ const BINDS = [['analógico esq.','ataque (8 direções)'],
      ['  j → ↗','g    gente, girafa'],
      ['— d-pad (pós-correção) —',''],
      ['→ / ←','cicla o acento da última vogal'],
-     ['↓','cicla a sibilante: ss → s → z'],
+     ['↓','cicla a sibilante: ss → s → z → x'],
+     ['↑','cicla a caixa: caio → Caio → CAIO'],
      ['— fora da sílaba —',''],
      ['A','espaço'],['A + RB','enter'],
      ['B','backspace (segurar repete; após 1,2s vai por palavra)'],
      ['LB + LT + B','limpa o texto todo'],
      ['X','ponto final'],['X + RB','vírgula'],
+     ['X + LB','parêntese  ( abre / fecha sozinho )'],
+     ['X + LT','aspas  \" abre / fecha sozinho \"'],
+     ['','maiúscula de início de frase é automática'],
      ['Y','interrogação'],['Y + RB','exclamação']];
 function paintBinds(){
   document.getElementById('binds').innerHTML =
@@ -801,8 +822,27 @@ function endWord(suffix){
        {palavra: finish(word), fim: suffix.trim() || 'espaço'});
   // Pontuação depois de uma palavra já fechada não pode herdar o espaço dela:
   // "palavra , " em vez de "palavra, ".
-  if(!word && /[.,!?]/.test(suffix)) text = text.replace(/ +$/,'');
+  if(!word && /^[.,!?)"\u201d]/.test(suffix)) text = text.replace(/ +$/,'');
   text += finish(word)+suffix; word='';
+}
+
+// Brackets and quotes come in pairs, and what makes a pair readable is where
+// the space goes: the one that OPENS sticks to the word after it, the one that
+// CLOSES sticks to the word before. Which of the two is due is derivable from
+// the text itself — brackets by the balance of open ones, quotes by parity — so
+// one button serves the whole pair and there is no mode to remember and no
+// state to get out of sync.
+function delimita(par){
+  const [ab, fe] = par;
+  const t = text + finish(word);
+  const conta = ch => t.split(ch).length - 1;
+  const abrindo = ab===fe ? conta(ab) % 2 === 0 : conta(ab) <= conta(fe);
+  const ch = abrindo ? ab : fe;
+  tlog(word ? 'palavra' : 'pontuacao', {palavra: finish(word), fim: ch});
+  text += finish(word); word = '';
+  text = text.replace(/ +$/,'');
+  text += abrindo ? (text ? ' ' : '') + ch : ch + ' ';
+  return ch;
 }
 
 // D-pad = post-correction on what is already written. Accents live here because
@@ -856,25 +896,67 @@ function cycleAccent(dir){
 // "talves" — where the s is final — the button was simply dead, and the log
 // caught eleven presses in a row with no effect and no feedback.
 const V_ACENTO = 'aeiouáéíóúâêôãõà';
+// ⟨x⟩ joins the cycle instead of getting an address of its own: in "próximo",
+// "exato" and "explicar" it spells a sibilant the design already reaches, so it
+// is an ALLOGRAPH, and allographs belong to the cycle — that is the sieve the
+// ç and the z went through before it. Measured: 0,617% of tokens between
+// vowels and 0,155% before a consonant. It comes last in the cycle because it
+// is the rarest of the three spellings.
+//
+// The pre-consonant slot is new. It is where "explicar", "experiência",
+// "exceto" and "extra" live, and it was simply unreachable: the old regex
+// required a vowel or the end of the word after the sibilant, so the 09/09 log
+// came out with "esplico" and no way to fix it.
 function toggleSibilant(){
   let virou = null;
   editBuffer(w => {
-    const re = new RegExp(`[${V_ACENTO}](ss|s|z)(?=[${V_ACENTO}]|$)`,'gi');
+    const re = new RegExp(`[${V_ACENTO}](ss|s|z|x)(?=[${V_ACENTO}~]|$|[^${V_ACENTO}])`,'gi');
     const hits = [...w.matchAll(re)];
     if(!hits.length) return null;
     const h = hits[hits.length-1];
     const i = h.index + 1, atual = h[1].toLowerCase();
-    const finalDePalavra = i + atual.length >= w.length;
-    const ciclo = finalDePalavra ? ['s','z'] : ['ss','s','z'];
+    const depois = w.slice(i + atual.length);
+    const ciclo = !depois                                    ? ['s','z','x']
+                : new RegExp(`^[${V_ACENTO}]`,'i').test(depois) ? ['ss','s','z','x']
+                : ['s','x'];                                 // coda: explicar, exceto
     const j = ciclo.indexOf(atual);
-    virou = ciclo[(j + 1) % ciclo.length];
+    virou = j<0 ? ciclo[0] : ciclo[(j + 1) % ciclo.length];
     return w.slice(0,i) + virou + w.slice(i + atual.length);
+  });
+  return virou;
+}
+
+// Cycles the case of the last word: minúscula → Inicial → TUDO → minúscula.
+// Proper nouns cannot be derived from anything, so they need an address, and ↑
+// was the only free d-pad slot. It beat the other candidate (a written-nasal
+// cycle for "trans") on frequency by a distance: every proper noun and every
+// acronym against one marked prefix.
+//
+// Resolves the buffer BEFORE rewriting, like backspace does: uppercasing the
+// raw string would turn "questau~" into "QUESTAU~", and the diphthong rules
+// would no longer recognise it. Every post-correction that rewrites the whole
+// word works on the visible text.
+function cycleCaps(){
+  let virou = null;
+  editBuffer(w => {
+    const t = finish(w);
+    const alvo = /(^|\s)(\S+)\s*$/.exec(t);
+    if(!alvo || !/[a-zà-ÿ]/i.test(alvo[2])) return null;
+    const p = alvo[2], i = t.lastIndexOf(p);
+    const tudo = p === p.toUpperCase() && /[A-ZÀ-Ý]/.test(p);
+    const inicial = !tudo && /^[A-ZÀ-Ý]/.test(p);
+    const novo = inicial ? p.toUpperCase() : tudo ? p.toLowerCase() : maiuscula(p);
+    virou = novo;
+    return t.slice(0,i) + novo + t.slice(i + p.length);
   });
   return virou;
 }
 
 function dpad(now){
   if(!atRest()) { Object.assign(dpadPrev, now); return; }
+  if(now.up && !dpadPrev.up){ const c=cycleCaps();
+    tlog('dpad',{op:'caixa', virou:c, achou:!!c});
+    if(!c) avisa('nenhuma palavra para trocar a caixa'); }
   if(now.right && !dpadPrev.right){ const v=cycleAccent(+1);
     tlog('dpad',{op:'acento→', vogal:v, achou:!!v, virou:finish(word)||text.slice(-14)});
     if(!v) avisa('nenhuma vogal para acentuar'); }
@@ -913,7 +995,14 @@ function faceButtons(pad){
   if(atRest()){
     // A = space · A+RB = enter
     if(now.A && !face.A) btn.RB ? endWord('\n') : endWord(' ');
-    if(now.X && !face.X) endWord(btn.RB ? ', ' : '. ');
+    // X é a família da pontuação, e os qualificadores dizem qual: nada = ponto,
+    // RB = vírgula, LB = parêntese, LT = aspas. Fora da sílaba os bumpers não
+    // disputam com coda nenhuma, então o custo é zero.
+    if(now.X && !face.X){
+      if(btn.LB)      delimita(['(',')']);
+      else if(btn.LT) delimita(['"','"']);
+      else            endWord(btn.RB ? ', ' : '. ');
+    }
     if(now.Y && !face.Y) endWord(btn.RB ? '! ' : '? ');
     // B = backspace. LB+LT+B wipes everything — three fingers, so it does not
     // happen by accident, and the log had a 50-deletion burst clearing a
@@ -1011,6 +1100,10 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowLeft'){  cycleAccent(-1); flash('left');  e.preventDefault(); }
   if(e.code==='ArrowDown'){  if(!toggleSibilant()) avisa('nenhuma sibilante para alternar');
                              flash('down');  e.preventDefault(); }
+  if(e.code==='ArrowUp'){    if(!cycleCaps()) avisa('nenhuma palavra para trocar a caixa');
+                             flash('up');    e.preventDefault(); }
+  if(e.code==='Digit9'&&e.shiftKey){ delimita(['(',')']); flash('X'); }
+  if(e.code==='Quote'){ delimita(['\"','\"']); flash('X'); e.preventDefault(); }
   if(e.code==='Period'&&e.shiftKey){ text+=finish(word)+'. '; word=''; flash('X'); }
   if(e.code==='Slash'&&e.shiftKey){ text+=finish(word)+'? '; word=''; flash('Y'); }
 });

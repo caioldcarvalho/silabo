@@ -20,6 +20,7 @@ const M = new Function('performance','document','addEventListener','navigator',
   'requestAnimationFrame','localStorage','setTimeout','Blob','URL',
   corpo + `return {satellites, renderHud, stick, btn, held, flash,
                    commit, tele, tlogPad, current, cycleAccent, toggleSibilant, drawPad, paintPad, axesNow,
+                   cycleCaps, inicioDeFrase, delimita,
                    setWord:w=>{word=w}, getWord:()=>word,
                    setText:t=>{text=t}, getText:()=>text, faceButtons, face, atRest, finish};`
 )({now:()=>0}, doc, ()=>{}, {getGamepads:()=>[], userAgent:'teste'}, ()=>{},
@@ -101,18 +102,75 @@ console.log('  ↑ era o bug: 2 toques acentuavam o "a" em vez de reverter o "e"
 t('só: o tem 4 estados',  ciclo('so',1),    ['só']);
 // o ciclo alcança o til, e o finish absorve o arquifonema nasal junto
 t('irmam + 3 toques → irmã',
-  (()=>{M.setWord('irmaN'); for(let i=0;i<3;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmã']);
+  (()=>{M.setWord('irma~'); for(let i=0;i<3;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmã']);
 t('e volta: mais 2 toques → irmam',
-  (()=>{M.setWord('irmaN'); for(let i=0;i<5;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmam']);
+  (()=>{M.setWord('irma~'); for(let i=0;i<5;i++) M.cycleAccent(1); return M.finish(M.getWord());})(), ['irmam']);
 console.log('\n— sibilante cicla ss → s → z, e funciona em fim de palavra —');
 const sib=(w,n=1)=>{M.setWord(w); for(let i=0;i<n;i++) M.toggleSibilant(); return M.getWord();};
 t('faser → fazer (intervocálico)', sib('faser'),      ['fazer']);
 // o bug que o log pegou: em "talves" o s é FINAL e o botão ficava morto
 t('talves → talvez (FINAL)',       sib('talves'),     ['talvez']);
-t('e volta',                        sib('talves',2),   ['talves']);
+t('  e mais um → talvex',           sib('talves',2),   ['talvex']);
+t('  e volta (o ciclo tem 3 no fim)',sib('talves',3),  ['talves']);
 t('inclussi → inclusi (ss→s)',      sib('inclussi'),   ['inclusi']);
 t('  de novo → incluzi',            sib('inclussi',2), ['incluzi']);
-t('  fecha o ciclo → inclussi',     sib('inclussi',3), ['inclussi']);
+t('  e agora o x → incluxi',        sib('inclussi',3), ['incluxi']);
+t('  fecha o ciclo → inclussi',     sib('inclussi',4), ['inclussi']);
+// o slot novo: sibilante em coda, antes de consoante. Era inalcançável, e foi
+// exatamente o que deixou "esplico" sem conserto no log de 09/09.
+t('esplico → explico (CODA)',       sib('esplico'),    ['explico']);
+t('  e volta',                      sib('esplico',2),  ['esplico']);
+t('esceto → exceto',                sib('esceto'),     ['exceto']);
+t('esperiência → experiência',      sib('esperiência'),['experiência']);
+t('próssimo → prósimo → prózimo → próximo', sib('próssimo',3), ['próximo']);
+t('esato → ezato → exato',          sib('esato',2),    ['exato']);
+console.log('  ↑ ⟨x⟩ é alógrafo, então entrou no ciclo em vez de ganhar botão');
+
+console.log('\n— caixa cicla no ↑, e o início de frase é automático —');
+const cx=(w,n=1)=>{M.setText(''); M.setWord(w); for(let i=0;i<n;i++) M.cycleCaps(); return M.getWord();};
+t('caio → Caio',        cx('caio'),   ['Caio']);
+t('  → CAIO',           cx('caio',2), ['CAIO']);
+t('  → caio (fecha)',   cx('caio',3), ['caio']);
+t('resolve o buffer antes: questau~ → QUESTÃO', cx('questau~',2), ['QUESTÃO']);
+t('acento sobrevive à caixa', cx('josé'), ['José']);
+t('sem palavra devolve null (e a UI avisa)',
+  (()=>{M.setText(''); M.setWord(''); return String(M.cycleCaps());})(), ['null']);
+// a de início de frase é REGRA: escrita no buffer, não só na tela
+const frase = t0 => { M.setText(t0); M.setWord(''); return M.inicioDeFrase(); };
+t('texto vazio começa frase',        String(frase('')),                ['true']);
+t('depois de ponto',                 String(frase('acabou. ')),        ['true']);
+t('depois de ponto e aspas',         String(frase('"acabou." ')),      ['true']);
+t('depois de vírgula NÃO',           String(frase('era, ')),           ['false']);
+t('no meio da frase NÃO',            String(frase('era uma vez ')),    ['false']);
+
+// e a prova no fluxo real: a maiúscula tem que nascer no COMMIT, não na tela
+const sil = (gates,rgates,btns={}) => { M.stick.L.gates=gates; M.stick.R.gates=rgates;
+  Object.assign(M.btn,{LB:0,LT:0,RB:0,RT:0,L3:0,R3:0},btns); M.commit(); };
+M.setText(''); M.setWord('');
+sil([6],[4]);                                   // l + a, texto vazio
+t('primeira palavra do texto sobe', M.getWord(), ['La']);
+M.setText('acabou. '); M.setWord('');
+sil([3],[2]);                                   // p + o
+t('e depois de ponto também', M.getWord(), ['Po']);
+M.setText('no meio '); M.setWord('');
+sil([3],[2]);
+t('no meio da frase não sobe', M.getWord(), ['po']);
+M.setText(''); M.setWord('');
+sil([1],[6]);                                   // c + e → "que"
+t('ataque de duas letras sobe só a primeira', M.getWord(), ['Que']);
+M.setText(''); M.setWord('');
+sil([],[2],{L3:1});                             // h + o
+t('o h também sobe', M.getWord(), ['Ho']);
+
+console.log('\n— parênteses e aspas: um botão serve o par —');
+const del = (t0,par,n=1) => { M.setText(t0); M.setWord('');
+  for(let i=0;i<n;i++) M.delimita(par); return M.getText(); };
+t('abre parêntese: cola na próxima', del('uma frase ',['(',')']),      ['uma frase (']);
+t('fecha: cola na anterior',         del('uma (frase ',['(',')']),     ['uma (frase) ']);
+t('aspas abrem por paridade',        del('ele disse ',['"','"']),      ['ele disse "']);
+t('e fecham',                        del('ele disse "oi ',['"','"']),  ['ele disse "oi" ']);
+t('no começo do texto não põe espaço', del('',['(',')']),              ['(']);
+t('par inteiro em dois toques',      del('nota ',['(',')'],2),         ['nota () ']);
 t('sem sibilante devolve null (e a UI avisa)',
   (()=>{M.setWord('couve'); return String(M.toggleSibilant());})(), ['null']);
 

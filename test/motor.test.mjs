@@ -213,11 +213,11 @@ grupo('backspace apaga o que se VÊ, não o buffer cru');
 // o /N/ não tem glifo: "questão" é "questauN" cru. Uma tecla que come o N
 // reescreve "ão" como "au" — foi o que custou 20s no log de 09/09.
 const apaga = (raw,n=1) => { let w=raw; for(let i=0;i<n;i++) w=M.finish(w).slice(0,-1); return M.finish(w); };
-t('questão  −1', apaga('questauN'),  'questã');
-t('questão  −2', apaga('questauN',2),'quest');
-t('potem    −1', apaga('poteN'),     'pote');
-t('irmãs    −1', apaga('irmaNs'),    'irmã');
-t('campo    −1', apaga('caNpo'),     'camp');
+t('questão  −1', apaga('questau~'),  'questã');
+t('questão  −2', apaga('questau~',2),'quest');
+t('potem    −1', apaga('pote~'),     'pote');
+t('irmãs    −1', apaga('irma~s'),    'irmã');
+t('campo    −1', apaga('ca~po'),     'camp');
 
 console.log(`\n${ok} ok, ${bad} falha(s)`);
 process.exit(bad ? 1 : 0);

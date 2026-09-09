@@ -865,20 +865,79 @@ tentativa repetida*, e ali era tecla sem alvo, aqui é tecla com o alvo errado.
 
 ---
 
+## 14. O recado do log, atendido (09/09, madrugada)
+
+As quatro pendências que ele digitou dentro da própria ferramenta. Nenhuma
+gastou endereço novo além de um: a peneira do §12 item 6 barrou o resto.
+
+### Maiúscula — metade é regra, metade precisava de endereço
+
+**Início de frase é derivável** (texto vazio, ou depois de `.` `!` `?`, mesmo
+com aspas ou parêntese fechando no meio), então sai sozinha. Nome próprio e
+sigla não são deriváveis de nada — esses ficaram no **`↑` do d-pad**, ciclando
+`caio → Caio → CAIO`.
+
+O `↑` era o último slot livre do d-pad e tinha um concorrente anotado no §11: o
+ciclador de nasal escrita (`til → n → m`), que daria saída pro "trans". Perdeu
+por frequência, e não de pouco: todo nome próprio e toda sigla contra um
+prefixo marcado.
+
+**A maiúscula é escrita no buffer, não na tela.** Fosse só na exibição, seria
+exatamente o bug do §13 outra vez, com o backspace e o d-pad editando uma
+string diferente da que se lê.
+
+### O arquifonema deixou de ser uma letra
+
+Consequência que só apareceu ao pôr maiúscula: com `/N/` como sentinela, a
+regra que resolve a nasal antes de vogal (`/N(?=[a-zà-ú])/gi`) **comia o N
+maiúsculo de "Não"** — a palavra voltava pra "não" sozinha. Trocado por `~`.
+
+> **Sentinela não pode ser um caractere que o conteúdo também usa.** Enquanto o
+> buffer era todo minúsculo o conflito ficou latente por cinco sessões.
+
+### ⟨x⟩ entrou no ciclo, não ganhou botão
+
+Em *próximo*, *exato* e *explicar* o ⟨x⟩ escreve uma sibilante que o desenho já
+alcança: é **alógrafo**, e alógrafo é ciclo — a mesma peneira que matou o `ç` e
+o `z` como endereços. O ciclo do `↓` virou `ss → s → z → x`.
+
+O que faltava de verdade era a **posição**: o regex exigia vogal ou fim de
+palavra depois da sibilante, então a **coda antes de consoante era
+inalcançável**. É onde moram `explicar` (44k), `experiência` (32k), `exceto`,
+`excelente`, `extra` — 0,1554% dos tokens — e é por isso que "esplico" saiu sem
+conserto no log. Entre vogais, ⟨x⟩ vale outros 0,617%.
+
+Custo do membro novo: fechar o ciclo passou a custar um toque a mais. Ele entra
+por último porque é a mais rara das grafias.
+
+### Parênteses e aspas: um botão serve o par
+
+`X` virou a família inteira da pontuação, com o qualificador dizendo qual —
+`RB` vírgula, **`LB` parêntese, `LT` aspas**. Fora da sílaba os bumpers não
+disputam com coda nenhuma, então custou zero.
+
+Qual dos dois membros do par é a vez **é derivável do texto**: parêntese pelo
+saldo de abertos, aspas pela paridade. Um botão, sem modo pra lembrar e sem
+estado pra dessincronizar. E a posição do espaço é o que torna o par legível: o
+que abre cola na palavra seguinte, o que fecha na anterior.
+
+**Estado:** 100 casos no motor, 79 na UI.
+
+---
+
 **Em aberto:**
 2. O conflito líquida×coda de A continua de pé — **186 formas** contra 122 de B,
    porque em B a líquida vinha do roll e não colidia com RB. O roll agora está
    provado como canal viável; a pergunta é se a líquida deve migrar para ele, e
    com o que qualificar a coda depois disso.
-3. Onde vão maiúscula e o modo letra-a-letra, que eram X e Y. **Pedido
-   explícito na sessão de 09/09**, junto com parênteses e aspas — e há espaço
-   de sobra fora da sílaba (os combos de LB/LT com as faces estão livres).
+3. O modo letra-a-letra (a maiúscula saiu do ar em 09/09: regra + ciclo no ↑).
 4. Labialização no ataque: `qu`+a resolvido por regra em 09/09; falta o
    tritongo (Uruguai, quais) e o /kw/ antes de e/i (frequente, tranquilo).
-5. Resto da pontuação (dois-pontos, aspas, parênteses).
-7. ⟨x⟩ com valor /s/ ou /ks/ (`explico`, `texto`, `próximo`) — apareceu como
-   "esplico" no log de 09/09. `L3` com o analógico **defletido** continua livre
-   e é o candidato óbvio.
+5. Resto da pontuação (dois-pontos, ponto-e-vírgula, travessão).
+7. `L3` com o analógico **defletido** segue livre — o único canal sobrando do
+   desenho inteiro. Não gastar sem passar pela peneira do item 6.
+8. Coda complexa /rs/, agora sem endereço nenhum (0,0279%, metade estrangeira).
+   Só volta se o item 7 for gasto nela, e provavelmente não vale.
 6. Antes de gastar qualquer slot novo, a peneira: **é derivável por regra? → é
    alógrafo de algo que já tem endereço? → tem endereço natural na roda?** Slot
    livre é passivo, não ativo: endereço barato faz gastar tabela onde uma regra

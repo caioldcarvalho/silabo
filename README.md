@@ -71,7 +71,8 @@ Sem controle, dá para testar no teclado:
 | `1` `2` `3` `4` `5` | LB, LT, RB, L3, R3 |
 | `2` (LT) · `4` (L3) | sonoriza · **h** (com o analógico parado) |
 | `Enter` · `Backspace` | fecha a palavra · apaga |
-| `←` `→` · `↓` | cicla acento · cicla sibilante |
+| `←` `→` · `↓` · `↑` | cicla acento · sibilante · caixa |
+| `(` · `'` | parêntese · aspas (abrem e fecham sozinhos) |
 
 ---
 
@@ -140,6 +141,40 @@ O português não é fonêmico o bastante para a escrita ser função do som: *s
 volta para quem digita — com **um fato motor só**:
 
 > *O som do gate em que você começou, escrito com a letra que mora em ↗.*
+
+O resto da grafia disputada é **ciclo no d-pad**, não endereço novo — porque
+alógrafo não merece botão:
+
+| d-pad | cicla |
+|---|---|
+| `↓` | a sibilante: `ss → s → z → x` — *isso, casa, fazer, próximo* |
+| `→` `←` | o acento da última vogal, e sempre volta ao natural |
+| `↑` | a caixa da última palavra: `caio → Caio → CAIO` |
+
+O `↓` alcança as três posições em que o português deixa a escolha em aberto:
+entre vogais, no fim da palavra e **na coda antes de consoante** — que é onde
+moram *explicar*, *exceto* e *experiência*.
+
+**A maiúscula de início de frase é regra**, não gesto: sai sozinha no começo do
+texto e depois de `.`, `!` ou `?`. O `↑` serve o que nenhuma regra deriva —
+nome próprio e sigla.
+
+### Pontuação
+
+`X` é a família inteira, e o qualificador diz qual:
+
+| gesto | sai |
+|---|---|
+| `X` | `.` |
+| `X`+`RB` | `,` |
+| `X`+`LB` | `(` ou `)` — pelo saldo de parênteses abertos |
+| `X`+`LT` | `"` — pela paridade |
+| `Y` · `Y`+`RB` | `?` · `!` |
+
+Um botão serve o **par inteiro**: qual dos dois é a vez sai do texto que já
+está escrito, então não há modo pra lembrar nem estado pra dessincronizar. E o
+espaço vai no lugar certo sozinho — o que abre cola na palavra seguinte, o que
+fecha cola na anterior.
 
 | gesto | sai | |
 |---|---|---|
@@ -229,8 +264,9 @@ o clique de analógico de 41% das sílabas para 18%.
 - `k`, `w` e `y` não têm endereço — o gate `—` do núcleo é redundante com o
   repouso e é o candidato natural (o `h` já saiu daqui: mora no `L3` com o
   analógico parado)
-- `x` com valor /s/ ou /ks/ (*explico*, *texto*, *próximo*) ainda sai como `s`
-- maiúsculas, parênteses e aspas ainda não existem
+- coda complexa `/rs/` (*perspectiva*) não sai — medido em 0,03% dos tokens, e
+  metade é nome estrangeiro
+- dois-pontos, ponto-e-vírgula e travessão ainda não têm endereço
 - plural de `-ão` é lexical (pães/mãos/ações), então vai sílaba a sílaba
 
 ## Testes e ferramentas
